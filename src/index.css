@@ -1,0 +1,230 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* ==========================================================================
+   LIGHT THEME OVERRIDES (CRISP INTEL DIRECTIVE)
+   ========================================================================== */
+
+/* Outer body & global defaults */
+.light {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Backgrounds mapping */
+.light .bg-\[\#05070A\] {
+  background-color: #f1f5f9 !important;
+}
+.light .bg-\[\#0B0F19\] {
+  background-color: #ffffff !important;
+}
+.light .bg-\[\#0B0F19\]\/50 {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(12px) !important;
+}
+.light .bg-\[\#0B0F19\]\/95 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+}
+.light .bg-\[\#161B2A\]\/40 {
+  background-color: #ffffff !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05) !important;
+}
+.light .bg-\[\#161B2A\]\/20 {
+  background-color: #f8fafc !important;
+}
+.light .bg-\[\#161B2A\]\/60 {
+  background-color: #f8fafc !important;
+}
+.light .bg-\[\#161B2A\]\/80 {
+  background-color: #f1f5f9 !important;
+}
+.light .bg-\[\#161B2A\] {
+  background-color: #ffffff !important;
+}
+.light .bg-slate-900\/60 {
+  background-color: #ffffff !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05) !important;
+}
+.light .bg-slate-950\/50 {
+  background-color: #f8fafc !important;
+}
+.light .bg-slate-950\/40 {
+  background-color: #f8fafc !important;
+}
+.light .bg-slate-950 {
+  background-color: #f1f5f9 !important;
+}
+.light .bg-black {
+  background-color: #f8fafc !important;
+}
+
+/* Borders mapping */
+.light .border-slate-800 {
+  border-color: #e2e8f0 !important;
+}
+.light .border-slate-800\/60 {
+  border-color: #e2e8f0 !important;
+}
+.light .border-slate-700 {
+  border-color: #cbd5e1 !important;
+}
+.light .border-slate-700\/50 {
+  border-color: #cbd5e1 !important;
+}
+.light .border-slate-900 {
+  border-color: #f1f5f9 !important;
+}
+
+/* Text color transformations */
+.light .text-slate-100 {
+  color: #0f172a !important;
+}
+.light .text-slate-200 {
+  color: #1e293b !important;
+}
+.light .text-slate-300 {
+  color: #334155 !important;
+}
+.light .text-slate-400 {
+  color: #475569 !important;
+}
+.light .text-slate-500 {
+  color: #64748b !important;
+}
+.light .text-white {
+  color: #0f172a !important;
+}
+
+/* Custom linear gradient decorative grid for Light Theme */
+.light .bg-\[linear-gradient\(to_right\,\#0B0F19_1px\,transparent_1px\)\,linear-gradient\(to_bottom\,\#0B0F19_1px\,transparent_1px\)\] {
+  background-image: linear-gradient(to right, #cbd5e1 1px, transparent 1px), linear-gradient(to bottom, #cbd5e1 1px, transparent 1px) !important;
+  opacity: 0.25 !important;
+}
+
+/* Interaction elements */
+.light .hover\:bg-\[\#161B2A\]\/60:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+.light .hover\:bg-\[\#161B2A\]\/80:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+.light .hover\:border-cyan-500\/30:hover {
+  border-color: rgba(6, 182, 212, 0.4) !important;
+}
+.light .hover\:border-cyan-500\/40:hover {
+  border-color: rgba(6, 182, 212, 0.5) !important;
+}
+.light .hover\:border-emerald-500\/40:hover {
+  border-color: rgba(16, 185, 129, 0.5) !important;
+}
+.light .hover\:border-emerald-500\/30:hover {
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+.light .hover\:border-indigo-500\/40:hover {
+  border-color: rgba(99, 102, 241, 0.5) !important;
+}
+.light .hover\:border-amber-500\/40:hover {
+  border-color: rgba(245, 158, 11, 0.5) !important;
+}
+.light .hover\:border-amber-500\/30:hover {
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+.light .hover\:border-pink-500\/40:hover {
+  border-color: rgba(236, 72, 153, 0.5) !important;
+}
+.light .hover\:border-fuchsia-500\/30:hover {
+  border-color: rgba(217, 70, 239, 0.4) !important;
+}
+.light .hover\:border-red-500\/30:hover {
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+.light .hover\:border-violet-500\/30:hover {
+  border-color: rgba(139, 92, 246, 0.4) !important;
+}
+.light .hover\:border-orange-500\/30:hover {
+  border-color: rgba(249, 115, 22, 0.4) !important;
+}
+
+/* Active side nav highlight classes */
+.light .active-nav-ceo {
+  background-color: rgba(6, 182, 212, 0.08) !important;
+  border-color: rgba(6, 182, 212, 0.3) !important;
+  color: #0891b2 !important;
+}
+.light .active-nav-gm {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #059669 !important;
+}
+.light .active-nav-training {
+  background-color: rgba(217, 70, 239, 0.08) !important;
+  border-color: rgba(217, 70, 239, 0.3) !important;
+  color: #c026d3 !important;
+}
+.light .active-nav-it {
+  background-color: rgba(139, 92, 246, 0.08) !important;
+  border-color: rgba(139, 92, 246, 0.3) !important;
+  color: #7c3aed !important;
+}
+.light .active-nav-hr {
+  background-color: rgba(245, 158, 11, 0.08) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  color: #d97706 !important;
+}
+.light .active-nav-bd {
+  background-color: rgba(14, 165, 233, 0.12) !important;
+  border-color: rgba(14, 165, 233, 0.4) !important;
+  color: #0284c7 !important;
+}
+.light .active-nav-operator {
+  background-color: rgba(244, 63, 94, 0.08) !important;
+  border-color: rgba(244, 63, 94, 0.3) !important;
+  color: #e11d48 !important;
+}
+
+/* Form Fields and Interactive Dropdowns */
+.light input[type="text"],
+.light input[type="number"],
+.light input[type="datetime-local"],
+.light select,
+.light textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+.light select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Tables style mapping */
+.light table {
+  color: #1e293b !important;
+}
+.light th {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+.light td {
+  border-color: #f1f5f9 !important;
+}
+
+/* Charts overrides */
+.light .recharts-cartesian-grid-horizontal line,
+.light .recharts-cartesian-grid-vertical line {
+  stroke: #e2e8f0 !important;
+}
+.light .recharts-text {
+  fill: #475569 !important;
+}
+

@@ -1,0 +1,121 @@
+{
+  "entities": {
+    "role_mapping": {
+      "title": "Role Mapping",
+      "description": "Email to role mapping configuration",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "description": "Email address of the staff member" },
+        "name": { "type": "string", "description": "Full name of the staff member" },
+        "role": { "type": "string", "enum": ["CEO", "GM", "Training Manager", "IT Manager", "HR Manager", "Operator", "Admin"], "description": "System access role" }
+      },
+      "required": ["email", "role"]
+    },
+    "facility": {
+      "title": "Facility",
+      "description": "Physical facility profile details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "client_id": { "type": "string" },
+        "address": { "type": "string" },
+        "category": { "type": "string", "enum": ["Office", "Hospital", "Campus", "Logistics", "Resort"] },
+        "status": { "type": "string", "enum": ["active", "under-maintenance", "inactive"] },
+        "audit_score": { "type": "number" },
+        "sla_compliance": { "type": "number" },
+        "incident_count": { "type": "number" },
+        "complaint_count": { "type": "number" }
+      },
+      "required": ["id", "name", "client_id"]
+    },
+    "client": {
+      "title": "Client",
+      "description": "Client contract details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "contract_value": { "type": "number" },
+        "billing_cycle": { "type": "string", "enum": ["Monthly", "Quarterly", "Annually"] },
+        "contract_start": { "type": "string" },
+        "contract_end": { "type": "string" },
+        "payment_status": { "type": "string", "enum": ["paid", "pending", "overdue"] },
+        "health_score": { "type": "number" }
+      },
+      "required": ["id", "name"]
+    },
+    "employee": {
+      "title": "Employee",
+      "description": "Staff member rosters",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "facility_id": { "type": "string" },
+        "doj: YYYY-MM-DD": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "on leave", "exited"] },
+        "reporting_manager_id": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "hourly_rate": { "type": "number" }
+      },
+      "required": ["id", "name", "facility_id", "email"]
+    }
+  },
+  "firestore": {
+    "role_mappings": {
+      "schema": "role_mapping",
+      "description": "User email mappings to access roles"
+    },
+    "facilities": {
+      "schema": "facility",
+      "description": "Facilities registered in the dashboard"
+    },
+    "clients": {
+      "schema": "client",
+      "description": "Corporate clients with active contracts"
+    },
+    "employees": {
+      "schema": "employee",
+      "description": "Staff directory"
+    },
+    "attendance": {
+      "schema": "attendance",
+      "description": "Roster check-ins"
+    },
+    "incidents": {
+      "schema": "incident",
+      "description": "Operational incidents queue"
+    },
+    "trainings": {
+      "schema": "training",
+      "description": "Staff development certifications"
+    },
+    "assets": {
+      "schema": "asset",
+      "description": "Facility hardware assets"
+    },
+    "tickets": {
+      "schema": "ticket",
+      "description": "IT support tickets"
+    },
+    "hrCases": {
+      "schema": "hrCase",
+      "description": "HR management case file dossiers"
+    },
+    "invoices": {
+      "schema": "invoice",
+      "description": "Billing invoices raised"
+    },
+    "payments": {
+      "schema": "payment",
+      "description": "Client payment records"
+    },
+    "auditLogs": {
+      "schema": "auditLog",
+      "description": "Command center compliance logs"
+    }
+  }
+}

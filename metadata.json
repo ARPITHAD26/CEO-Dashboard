@@ -1,0 +1,8 @@
+{
+  "name": "Spoorthy Samanvaya",
+  "description": "A multi-role executive dashboard and operations command center for facility management company leadership, featuring role-based metrics and a shared data-entry system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
