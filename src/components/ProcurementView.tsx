@@ -4,9 +4,8 @@ import { logAuditEntry, saveState } from '../data/store';
 import { 
   ShoppingBag, Sliders, PlusCircle, CheckCircle, Trash2, 
   Edit2, Download, AlertTriangle, FileText, UserCheck, RefreshCw,
-  Briefcase, Boxes, CheckSquare, Layers, Search
+  Briefcase, Boxes, CheckSquare, Layers, Search, Maximize2, Sparkles, X
 } from 'lucide-react';
-import { TenderManagementView } from './TenderManagementView';
 import { StoresAndInventoryView } from './StoresAndInventoryView';
 import { ProcurementTeamTaskView } from './ProcurementTeamTaskView';
 
@@ -27,8 +26,7 @@ export default function ProcurementView({
   subRoleName,
   currentRole = 'Procurement Head'
 }: ProcurementViewProps) {
-  const allTabs: { id: 'tenders' | 'requests' | 'stores' | 'teamtasks' | 'vendors' | 'tasks'; label: string; icon: any }[] = [
-    { id: 'tenders', label: 'Tender Lifecycle & Bids', icon: Briefcase },
+  const allTabs: { id: 'requests' | 'stores' | 'teamtasks' | 'vendors' | 'tasks'; label: string; icon: any }[] = [
     { id: 'requests', label: 'Purchase Indents & 3-Way Match', icon: ShoppingBag },
     { id: 'stores', label: 'Stores & Material Ledger', icon: Boxes },
     { id: 'teamtasks', label: 'Team Daily Tasks & EOD', icon: CheckSquare },
@@ -40,7 +38,7 @@ export default function ProcurementView({
     ? allTabs.filter(t => allowedSubViews.includes(t.id))
     : allTabs;
 
-  const defaultTab = availableTabs.length > 0 ? availableTabs[0].id : 'tenders';
+  const defaultTab = availableTabs.length > 0 ? availableTabs[0].id : 'requests';
 
   const [prForm, setPrForm] = useState<Partial<PurchaseRequest>>({
     request_no: '', item: '', quantity: 1, estimated_cost: 0, vendor_id: '', amc_status: 'None', remarks: ''
@@ -50,8 +48,9 @@ export default function ProcurementView({
   });
   const [editingPrId, setEditingPrId] = useState<string | null>(null);
   const [editingVendorId, setEditingVendorId] = useState<string | null>(null);
-  const [activeSubTab, setActiveSubTab] = useState<'tenders' | 'requests' | 'stores' | 'teamtasks' | 'vendors' | 'tasks'>(defaultTab);
+  const [activeSubTab, setActiveSubTab] = useState<'requests' | 'stores' | 'teamtasks' | 'vendors' | 'tasks'>(defaultTab);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
   // Stats
   const totalPRs = state.purchaseRequests.length;
@@ -208,33 +207,171 @@ export default function ProcurementView({
   return (
     <div className="space-y-6">
 
-      {/* Procurement Radar Executive Header */}
-      <div className="bg-gradient-to-r from-sky-600 via-sky-700 to-blue-700 text-white p-6 rounded-3xl shadow-xl border border-sky-400/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-white border border-white/30 flex items-center gap-1">
-              <ShoppingBag className="w-3 h-3" /> Procurement &amp; Supply Radar
-            </span>
-            <span className="text-xs text-sky-100 font-mono">Active Purchase Requests: {totalPRs}</span>
+      {/* Full-Screen HD Photo Modal */}
+      {isPhotoModalOpen && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setIsPhotoModalOpen(false)}
+        >
+          <div 
+            className="relative max-w-2xl w-full bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-md">
+                  <ShoppingBag className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white tracking-wide">Executive Portrait</h3>
+                  <p className="text-[10.5px] text-slate-400 font-mono">Official Corporate Leadership Photograph</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsPhotoModalOpen(false)}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition cursor-pointer"
+                aria-label="Close photo preview"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* High Definition Image Container */}
+            <div className="relative rounded-2xl overflow-hidden border-2 border-slate-700/80 bg-black shadow-inner flex items-center justify-center min-h-[380px] max-h-[520px]">
+              <img 
+                src="/procurement-head-profile.jpg" 
+                alt="Procurement Head - Executive Portrait" 
+                className="w-full max-h-[500px] object-contain"
+                style={{ imageRendering: '-webkit-optimize-contrast' }}
+              />
+              <div className="absolute top-2.5 left-2.5 bg-black/85 backdrop-blur-md px-2.5 py-1 rounded-lg border border-cyan-400/40 text-[9.5px] font-mono text-cyan-300 font-bold flex items-center gap-1.5 shadow-lg">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>ORIGINAL HD • 1024 × 682</span>
+              </div>
+            </div>
+
+            {/* Executive Details Card */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Designation</div>
+                <div className="font-bold text-slate-200 mt-0.5 truncate">Procurement Head</div>
+              </div>
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Department</div>
+                <div className="font-bold text-slate-200 mt-0.5 truncate">Procurement & Supply</div>
+              </div>
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Active Indents</div>
+                <div className="font-bold text-cyan-400 mt-0.5 truncate">{totalPRs} Total ({pendingPRs} Pending)</div>
+              </div>
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Vendor Rating</div>
+                <div className="font-bold text-emerald-400 mt-0.5 truncate">{avgPerformance}% Avg</div>
+              </div>
+            </div>
+
+            {/* Footer with Details & Download */}
+            <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
+              <div className="text-[11px] text-slate-400 font-mono">
+                <span className="text-slate-200 font-bold">Scope:</span> Indents, 3-Way Match, Vendor SLA & Material Ledger
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href="/procurement-head-profile.jpg"
+                  download="Spoorthy_Procurement_Head_Portrait_HD.jpg"
+                  className="px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download HD</span>
+                </a>
+                <button
+                  onClick={() => setIsPhotoModalOpen(false)}
+                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Procurement &amp; Supply Chain Radar</h1>
-          <p className="text-sky-100 text-sm mt-1 max-w-2xl">
-            Centralized portal governing tender bids, vendor partnerships, stores &amp; stock ledger, 3-way match purchase indents, and team productivity tracking.
-          </p>
+        </div>
+      )}
+
+      {/* Procurement Executive Header */}
+      <div className="bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 text-white p-6 rounded-3xl shadow-xl border border-slate-500/30 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+          {/* Procurement Head HD Photo Frame */}
+          <div 
+            className="relative group cursor-pointer shrink-0" 
+            onClick={() => setIsPhotoModalOpen(true)} 
+            title="Click to view full HD portrait of Procurement Head"
+          >
+            {/* Outer decorative glowing ring */}
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-amber-400 via-orange-400 to-yellow-300 opacity-75 group-hover:opacity-100 blur-sm transition duration-300" />
+            
+            <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-white/90 shadow-xl bg-slate-900">
+              <img 
+                src="/procurement-head-profile.jpg" 
+                alt="Procurement Head" 
+                className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                style={{ imageRendering: '-webkit-optimize-contrast' }}
+                loading="eager"
+              />
+              
+              {/* Hover overlay with zoom icon */}
+              <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 backdrop-blur-[2px]">
+                <Maximize2 className="w-5 h-5 text-white drop-shadow" />
+                <span className="text-[9px] font-mono font-bold text-white uppercase tracking-wider">View HD</span>
+              </div>
+
+              {/* HD Badge indicator */}
+              <div className="absolute bottom-1 right-1 bg-black/85 backdrop-blur-md px-1.5 py-0.5 rounded text-[8px] font-mono font-extrabold text-amber-300 border border-amber-400/40 flex items-center gap-0.5 shadow-sm">
+                <Sparkles className="w-2.5 h-2.5 text-amber-400 animate-pulse" />
+                <span>HD</span>
+              </div>
+            </div>
+
+            {/* Online pulse indicator */}
+            <span className="absolute -top-1 -right-1 flex h-4 w-4">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white"></span>
+            </span>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-white border border-white/30 flex items-center gap-1">
+                <ShoppingBag className="w-3 h-3 text-slate-200" /> Procurement & Supply
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Active Purchase Requests: {totalPRs}
+              </span>
+            </div>
+            <h1 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5 flex-wrap">
+              <span>Procurement Head</span>
+              <span className="text-xs sm:text-sm font-semibold text-slate-100 font-sans tracking-normal bg-white/10 px-2.5 py-1 rounded-lg border border-white/20">
+                Supply Chain Control Tower
+              </span>
+            </h1>
+            <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
+              Centralized portal governing tender bids, vendor partnerships, stores & stock ledger, 3-way match purchase indents, and team productivity tracking.
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => setActiveSubTab('requests')}
-            className="px-4 py-2 bg-white hover:bg-sky-50 text-sky-900 text-xs font-bold rounded-2xl shadow transition flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 bg-white/15 hover:bg-white/25 border border-white/30 text-white text-xs font-bold rounded-2xl shadow-sm transition flex items-center gap-1.5 cursor-pointer"
           >
-            <PlusCircle className="w-4 h-4 text-sky-700" /> New Indent / Request
+            <PlusCircle className="w-4 h-4 text-slate-200" /> New Indent / Request
           </button>
           <button
             onClick={() => setActiveSubTab('tenders')}
-            className="px-3.5 py-2 bg-sky-800/80 hover:bg-sky-800 text-sky-100 text-xs font-bold rounded-2xl border border-sky-400/30 transition flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-2 bg-white/15 hover:bg-white/25 text-white text-xs font-bold rounded-2xl border border-white/30 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
           >
-            <Briefcase className="w-4 h-4 text-sky-300" /> Tender Lifecycle
+            <Briefcase className="w-4 h-4 text-slate-200" /> Tender Lifecycle
           </button>
         </div>
       </div>
@@ -304,15 +441,6 @@ export default function ProcurementView({
       )}
 
       {/* SubTab Views Rendering */}
-      {activeSubTab === 'tenders' && (
-        <TenderManagementView
-          state={state}
-          currentRole={currentRole}
-          userEmail={currentUserEmail}
-          onUpdateState={(updater) => onUpdateState(updater(state))}
-        />
-      )}
-
       {activeSubTab === 'stores' && (
         <StoresAndInventoryView
           state={state}

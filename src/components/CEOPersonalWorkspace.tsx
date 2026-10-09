@@ -500,7 +500,7 @@ export default function CEOPersonalWorkspace({
         {/* ------------------------------------------------------------- */}
         <div className="flex items-center gap-2 mt-6 pt-5 border-t border-sky-900/30 overflow-x-auto pb-1">
           {[
-            { id: 'overview', label: 'Executive Portfolio Radar', icon: Compass, badge: null },
+            { id: 'overview', label: 'Executive Portfolio', icon: Compass, badge: null },
             { id: 'my_work', label: 'My Work & Execution', icon: Bookmark, badge: filteredMyWork.length },
             { id: 'td_portfolio', label: 'T&D Compliance Suite', icon: GraduationCap, badge: `${tdAchievementPct}%` },
             { id: 'it_portfolio', label: 'IT Projects (OpsVision, HRMS)', icon: Laptop, badge: `${itProjects.length}` },
@@ -537,7 +537,7 @@ export default function CEOPersonalWorkspace({
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* 1. EXECUTIVE PORTFOLIO RADAR (PAST, CURRENT, FUTURE)          */}
+      {/* 1. EXECUTIVE PORTFOLIO (PAST, CURRENT, FUTURE)                */}
       {/* ------------------------------------------------------------- */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
@@ -814,7 +814,7 @@ export default function CEOPersonalWorkspace({
           <div className="bg-[#0e1626] border border-sky-900/40 rounded-3xl p-6 shadow-xl relative overflow-hidden">
             <div className="flex items-center gap-2 mb-3">
               <Sparkles className="w-5 h-5 text-sky-400 animate-pulse" />
-              <h3 className="text-base font-bold text-white">Management Intelligence &amp; Exception Radar</h3>
+              <h3 className="text-base font-bold text-white">Management Intelligence &amp; Exceptions</h3>
             </div>
             <p className="text-xs text-slate-400 mb-4">
               Instant automated answers derived from live structured work records. No manual report recreation.
@@ -1077,16 +1077,16 @@ export default function CEOPersonalWorkspace({
             ))}
           </div>
 
-          {/* Compliance Radar Matrix */}
+          {/* Compliance Matrix */}
           <div className="bg-[#0e1626] border border-sky-900/40 rounded-3xl p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-sky-400" />
-                  Compliance Training Radar &amp; Mandatory Standards
+                  Compliance Training &amp; Mandatory Standards
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Live statutory compliance radar across healthcare, industrial, tech parks, and hospitality sites.
+                  Live statutory compliance across healthcare, industrial, tech parks, and hospitality sites.
                 </p>
               </div>
             </div>

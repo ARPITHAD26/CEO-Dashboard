@@ -23,11 +23,14 @@ export function getInitialState(): AppState {
           crmFollowUps: parsed.crmFollowUps?.length ? parsed.crmFollowUps : seed.crmFollowUps,
           crmActivities: parsed.crmActivities?.length ? parsed.crmActivities : seed.crmActivities,
           crmVisits: parsed.crmVisits?.length ? parsed.crmVisits : seed.crmVisits,
-          crmMeetings: parsed.crmMeetings?.length ? parsed.crmMeetings : seed.crmMeetings,
+          crmMeetings: (parsed.crmMeetings && parsed.crmMeetings.length >= 4) ? parsed.crmMeetings : seed.crmMeetings,
           crmQuotations: parsed.crmQuotations?.length ? parsed.crmQuotations : seed.crmQuotations,
           crmDars: parsed.crmDars?.length ? parsed.crmDars : seed.crmDars,
           crmClientMasters: parsed.crmClientMasters?.length ? parsed.crmClientMasters : seed.crmClientMasters,
           crmTeamStatuses: parsed.crmTeamStatuses?.length ? parsed.crmTeamStatuses : seed.crmTeamStatuses,
+          crmDiaryTasks: parsed.crmDiaryTasks?.length ? parsed.crmDiaryTasks : seed.crmDiaryTasks,
+          crmWorkflowRules: parsed.crmWorkflowRules?.length ? parsed.crmWorkflowRules : seed.crmWorkflowRules,
+          crmWorkflowLogs: parsed.crmWorkflowLogs?.length ? parsed.crmWorkflowLogs : seed.crmWorkflowLogs,
           tdPlans: parsed.tdPlans?.length ? parsed.tdPlans : seed.tdPlans,
           tdTrainers: parsed.tdTrainers?.length ? parsed.tdTrainers : seed.tdTrainers,
           tdSessions: parsed.tdSessions?.length ? parsed.tdSessions : seed.tdSessions,
@@ -39,7 +42,9 @@ export function getInitialState(): AppState {
           meetingActions: parsed.meetingActions?.length ? parsed.meetingActions : seed.meetingActions,
           contextFiles: parsed.contextFiles || [],
           myWorkItems: parsed.myWorkItems?.length ? parsed.myWorkItems : seed.myWorkItems,
-          liveUpdates: parsed.liveUpdates?.length ? parsed.liveUpdates : seed.liveUpdates
+          liveUpdates: parsed.liveUpdates?.length ? parsed.liveUpdates : seed.liveUpdates,
+          governmentTenders: parsed.governmentTenders?.length ? parsed.governmentTenders : seed.governmentTenders,
+          privateTenders: parsed.privateTenders || []
         } as AppState;
       }
     } catch (e) {
@@ -753,6 +758,9 @@ export function filterStateForRole(state: AppState, role: Role, userEmail: strin
     filtered.crmDars = state.crmDars;
     filtered.crmClientMasters = state.crmClientMasters;
     filtered.crmTeamStatuses = state.crmTeamStatuses;
+    filtered.crmDiaryTasks = state.crmDiaryTasks;
+    filtered.crmWorkflowRules = state.crmWorkflowRules;
+    filtered.crmWorkflowLogs = state.crmWorkflowLogs;
   }
 
   // 4. Human Resources

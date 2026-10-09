@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { CRMFollowUp, CRMLead, AppState } from '../../types';
-import { 
-  Plus, Search, Filter, Phone, MessageSquare, Mail, 
-  Calendar, Clock, CheckCircle2, AlertTriangle, ArrowRight, 
+import {
+  Plus, Search, Filter, Phone, MessageSquare, Mail,
+  Calendar, Clock, CheckCircle2, AlertTriangle, ArrowRight,
   X, Check, RefreshCw, ShieldAlert, User, Building2, Flame
 } from 'lucide-react';
 
@@ -66,7 +66,7 @@ export const CRMFollowupTracker: React.FC<Props> = ({
     else if (timeFilter === 'completed') list = completedList;
 
     return list.filter(f => {
-      const matchesSearch = 
+      const matchesSearch =
         f.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         f.next_action.toLowerCase().includes(searchTerm.toLowerCase()) ||
         f.assigned_executive.toLowerCase().includes(searchTerm.toLowerCase());
@@ -155,24 +155,22 @@ export const CRMFollowupTracker: React.FC<Props> = ({
 
   return (
     <div className="space-y-6">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
             <span>Follow-up &amp; Action Reminder Command Hub</span>
-            <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold border border-amber-500/30">
+            <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-mono text-[10px] font-bold border border-amber-300">
               {todayList.length} Due Today
             </span>
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Strict enforcement of Core Principle 2: "No lead exists without an active owner, and no active lead exits without a next action."
-          </p>
+
         </div>
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-400 hover:to-teal-500 text-slate-950 font-bold text-xs rounded-xl shadow-lg flex items-center gap-2 transition active:scale-95 cursor-pointer shrink-0"
+          className="px-4 py-2 bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-300 hover:to-sky-400 text-white font-bold text-xs rounded-xl shadow-md shadow-sky-400/20 flex items-center gap-2 transition active:scale-95 cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Schedule New Action</span>
@@ -182,21 +180,20 @@ export const CRMFollowupTracker: React.FC<Props> = ({
       {/* Time Segments Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-6 gap-2.5">
         {[
-          { id: 'overdue', label: 'Overdue Alerts', count: overdueList.length, color: 'border-rose-500/40 text-rose-400 bg-rose-950/20' },
-          { id: 'today', label: 'Due Today', count: todayList.length, color: 'border-amber-500/40 text-amber-300 bg-amber-950/20' },
-          { id: 'tomorrow', label: 'Due Tomorrow', count: tomorrowList.length, color: 'border-cyan-500/40 text-cyan-300 bg-cyan-950/20' },
-          { id: 'upcoming', label: 'Upcoming', count: upcomingList.length, color: 'border-indigo-500/40 text-indigo-300 bg-indigo-950/20' },
-          { id: 'completed', label: 'Completed Log', count: completedList.length, color: 'border-emerald-500/40 text-emerald-300 bg-emerald-950/20' },
-          { id: 'all', label: 'All Actions', count: followUps.length, color: 'border-slate-700 text-slate-300 bg-slate-900/40' }
+          { id: 'overdue', label: 'Overdue Alerts', count: overdueList.length, activeStyle: 'border-rose-400 text-rose-800 bg-rose-50 ring-1 ring-rose-400' },
+          { id: 'today', label: 'Due Today', count: todayList.length, activeStyle: 'border-amber-400 text-amber-800 bg-amber-50 ring-1 ring-amber-400' },
+          { id: 'tomorrow', label: 'Due Tomorrow', count: tomorrowList.length, activeStyle: 'border-sky-400 text-sky-800 bg-sky-50 ring-1 ring-sky-400' },
+          { id: 'upcoming', label: 'Upcoming', count: upcomingList.length, activeStyle: 'border-indigo-400 text-indigo-800 bg-indigo-50 ring-1 ring-indigo-400' },
+          { id: 'completed', label: 'Completed Log', count: completedList.length, activeStyle: 'border-emerald-400 text-emerald-800 bg-emerald-50 ring-1 ring-emerald-400' },
+          { id: 'all', label: 'All Actions', count: followUps.length, activeStyle: 'border-slate-400 text-slate-800 bg-slate-100 ring-1 ring-slate-400' }
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setTimeFilter(tab.id as any)}
-            className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
-              timeFilter === tab.id 
-                ? `${tab.color} ring-1 ring-cyan-400 font-bold shadow-md` 
-                : 'bg-[#0e1320] border-slate-800 text-slate-400 hover:border-slate-700'
-            }`}
+            className={`p-3 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between shadow-xs ${timeFilter === tab.id
+                ? `${tab.activeStyle} font-bold shadow-sm`
+                : 'bg-white border-sky-200 text-slate-600 hover:border-sky-300 hover:bg-sky-50/50'
+              }`}
           >
             <span className="text-[10px] font-mono uppercase block">{tab.label}</span>
             <div className="text-lg font-mono font-bold mt-1">{tab.count}</div>
@@ -205,22 +202,22 @@ export const CRMFollowupTracker: React.FC<Props> = ({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-[#0e1320] border border-slate-800 p-4 rounded-2xl flex flex-wrap items-center gap-3">
+      <div className="bg-white border border-sky-200 p-4 rounded-2xl flex flex-wrap items-center gap-3 shadow-sm">
         <div className="relative flex-1 min-w-[220px]">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="Search Follow-up by Company, Next Action, Executive..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-slate-900 border border-slate-700/80 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+            className="w-full pl-9 pr-3 py-2 bg-sky-50/50 border border-sky-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white transition"
           />
         </div>
 
         <select
           value={executiveFilter}
           onChange={e => setExecutiveFilter(e.target.value)}
-          className="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-slate-300 focus:outline-none font-mono"
+          className="px-3 py-2 bg-sky-50/50 border border-sky-200 rounded-xl text-xs text-slate-700 focus:outline-none font-mono font-semibold"
         >
           <option value="All">All Executives</option>
           <option value="Vikram">Vikram Singh</option>
@@ -237,41 +234,39 @@ export const CRMFollowupTracker: React.FC<Props> = ({
           const isToday = flw.status === 'Pending' && flw.followup_date === todayStr;
 
           return (
-            <div 
-              key={flw.id} 
-              className={`p-4 rounded-2xl border transition flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                isOverdue ? 'bg-rose-950/20 border-rose-500/40 hover:border-rose-400' :
-                isToday ? 'bg-amber-950/20 border-amber-500/40 hover:border-amber-400' :
-                'bg-[#0e1320] border-slate-800 hover:border-slate-700'
-              }`}
+            <div
+              key={flw.id}
+              className={`p-4 rounded-2xl border transition flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm ${isOverdue ? 'bg-rose-50/50 border-rose-200 hover:border-rose-400' :
+                  isToday ? 'bg-amber-50/50 border-amber-200 hover:border-amber-400' :
+                    'bg-white border-sky-200 hover:border-sky-400'
+                }`}
             >
               <div className="space-y-1.5 min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono">
-                  <span className={`px-2 py-0.5 rounded font-bold uppercase ${
-                    isOverdue ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
-                    isToday ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
-                    'bg-slate-800 text-slate-300 border border-slate-700'
-                  }`}>
+                  <span className={`px-2 py-0.5 rounded-full font-bold uppercase border ${isOverdue ? 'bg-rose-100 text-rose-800 border-rose-300' :
+                      isToday ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                        'bg-sky-100 text-sky-800 border-sky-200'
+                    }`}>
                     {flw.type} • {flw.followup_date} ({flw.followup_time || '10:00 AM'})
                   </span>
 
-                  <span className="text-slate-400">
-                    Owner: <strong className="text-slate-200">{flw.assigned_executive}</strong>
+                  <span className="text-slate-500">
+                    Owner: <strong className="text-slate-800">{flw.assigned_executive}</strong>
                   </span>
 
                   {isOverdue && (
-                    <span className="px-1.5 py-0.2 rounded bg-rose-500 text-slate-950 font-bold font-mono">
+                    <span className="px-1.5 py-0.2 rounded bg-rose-600 text-white font-bold font-mono">
                       OVERDUE
                     </span>
                   )}
                 </div>
 
-                <h4 className="text-sm font-bold text-slate-100">{flw.company_name}</h4>
-                <p className="text-xs text-slate-300 font-medium">
+                <h4 className="text-sm font-bold text-slate-900">{flw.company_name}</h4>
+                <p className="text-xs text-slate-700 font-medium">
                   <strong>Action:</strong> {flw.next_action}
                 </p>
                 {flw.discussion && (
-                  <p className="text-[11px] text-slate-400 line-clamp-1">
+                  <p className="text-[11px] text-slate-500 line-clamp-1">
                     Context: {flw.discussion}
                   </p>
                 )}
@@ -285,7 +280,7 @@ export const CRMFollowupTracker: React.FC<Props> = ({
                         setCompletingFollowUp(flw);
                         setMandatoryNextDate(tomorrowStr);
                       }}
-                      className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
+                      className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
                     >
                       <Check className="w-3.5 h-3.5" />
                       <span>Mark Done &amp; Set Next</span>
@@ -297,14 +292,14 @@ export const CRMFollowupTracker: React.FC<Props> = ({
                           onUpdateFollowUp({ ...flw, followup_date: newDate });
                         }
                       }}
-                      className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-xl border border-slate-700 transition"
+                      className="px-2.5 py-1.5 bg-white hover:bg-sky-50 text-slate-600 hover:text-sky-700 text-xs rounded-xl border border-slate-200 hover:border-sky-300 transition cursor-pointer"
                       title="Reschedule"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
                     </button>
                   </>
                 ) : (
-                  <span className="px-3 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold border border-emerald-500/30 flex items-center gap-1">
+                  <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-mono text-xs font-bold border border-emerald-300 flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     Completed
                   </span>
@@ -315,7 +310,7 @@ export const CRMFollowupTracker: React.FC<Props> = ({
         })}
 
         {currentList.length === 0 && (
-          <div className="bg-[#0e1320] border border-slate-800 rounded-2xl p-12 text-center text-slate-500 font-mono text-xs">
+          <div className="bg-white border border-sky-200 rounded-2xl p-12 text-center text-slate-400 font-mono text-xs shadow-sm">
             No follow-up items found in this category.
           </div>
         )}
@@ -325,17 +320,17 @@ export const CRMFollowupTracker: React.FC<Props> = ({
       {/* MARK DONE & ENFORCE NEXT ACTION MODAL                                     */}
       {/* ========================================================================= */}
       {completingFollowUp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-[#0f1423] border border-emerald-500/40 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-            
-            <div className="bg-gradient-to-r from-teal-900 via-emerald-950 to-slate-900 p-5 border-b border-emerald-500/30 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white border border-emerald-300 w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+
+            <div className="bg-gradient-to-r from-emerald-600 to-teal-700 p-5 flex items-center justify-between text-white">
               <div>
-                <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold block">CORE CRM RULE ENFORCEMENT</span>
-                <h3 className="text-base font-black text-slate-100">Complete Follow-up for {completingFollowUp.company_name}</h3>
+                <span className="text-[10px] font-mono uppercase text-emerald-200 font-bold block">CORE CRM RULE ENFORCEMENT</span>
+                <h3 className="text-base font-bold text-white">Complete Follow-up for {completingFollowUp.company_name}</h3>
               </div>
               <button
                 onClick={() => setCompletingFollowUp(null)}
-                className="p-1.5 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700"
+                className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -343,58 +338,58 @@ export const CRMFollowupTracker: React.FC<Props> = ({
 
             <form onSubmit={handleCompleteFollowUp} className="p-6 space-y-4 text-xs">
               <div>
-                <label className="text-[10px] font-mono text-slate-400 block mb-1">What was the outcome / client response?</label>
+                <label className="text-[10px] font-mono text-slate-600 block mb-1 font-semibold">What was the outcome / client response?</label>
                 <textarea
                   rows={2}
                   required
                   placeholder="e.g. Client CFO approved commercial rates; requested draft agreement copy by tomorrow..."
                   value={completionDiscussion}
                   onChange={e => setCompletionDiscussion(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                  className="w-full px-3 py-2 bg-sky-50/50 border border-sky-200 rounded-xl text-slate-800 focus:outline-none focus:bg-white focus:border-sky-500"
                 />
               </div>
 
-              <div className="p-4 bg-amber-950/30 border border-amber-500/40 rounded-xl space-y-3">
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-amber-300 uppercase font-bold">Mandatory Next Action (Core Principle 2)</span>
-                  <span className="text-[10px] text-rose-400 font-mono font-bold">* Required</span>
+                  <span className="text-[10px] font-mono text-amber-800 uppercase font-bold">Mandatory Next Action (Core Principle 2)</span>
+                  <span className="text-[10px] text-rose-600 font-mono font-bold">* Required</span>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-mono text-slate-300 block mb-1 font-bold">Immediate Next Action</label>
+                  <label className="text-[10px] font-mono text-slate-700 block mb-1 font-bold">Immediate Next Action</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Email drafted agreement for legal vetting"
                     value={mandatoryNextAction}
                     onChange={e => setMandatoryNextAction(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-slate-900 border border-amber-500/50 rounded-lg text-slate-200"
+                    className="w-full px-3 py-2 bg-white border border-amber-300 rounded-xl text-slate-800 focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-mono text-slate-300 block mb-1 font-bold">Next Action Due Date</label>
+                  <label className="text-[10px] font-mono text-slate-700 block mb-1 font-bold">Next Action Due Date</label>
                   <input
                     type="date"
                     required
                     value={mandatoryNextDate}
                     onChange={e => setMandatoryNextDate(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-slate-900 border border-amber-500/50 rounded-lg text-slate-200 font-mono"
+                    className="w-full px-3 py-2 bg-white border border-amber-300 rounded-xl text-slate-800 font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex justify-end gap-3 pt-3 border-t border-sky-100">
                 <button
                   type="button"
                   onClick={() => setCompletingFollowUp(null)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition active:scale-95 cursor-pointer"
+                  className="px-5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-500/20 transition active:scale-95 cursor-pointer"
                 >
                   Save &amp; Auto-Schedule Next Action
                 </button>
@@ -407,13 +402,13 @@ export const CRMFollowupTracker: React.FC<Props> = ({
 
       {/* ADD NEW SCHEDULE MODAL */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-[#0f1423] border border-cyan-500/40 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-            <div className="bg-gradient-to-r from-teal-900 via-cyan-950 to-slate-900 p-5 border-b border-cyan-500/30 flex items-center justify-between">
-              <h3 className="text-base font-black text-slate-100">Schedule Follow-up Action</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white border border-sky-300 w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+            <div className="bg-white p-5 border-b border-slate-200 flex items-center justify-between text-slate-800">
+              <h3 className="text-base font-bold text-slate-900">Schedule Follow-up Action</h3>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-1.5 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700"
+                className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -422,23 +417,23 @@ export const CRMFollowupTracker: React.FC<Props> = ({
             <form onSubmit={handleSaveNew} className="p-6 space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="sm:col-span-2">
-                  <label className="text-[10px] font-mono text-slate-400 block mb-1">Company / Lead Name *</label>
+                  <label className="text-[10px] font-mono text-slate-600 block mb-1 font-semibold">Company / Lead Name *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Flipkart Fulfillment Hub"
                     value={newFollowUp.company_name}
                     onChange={e => setNewFollowUp({ ...newFollowUp, company_name: e.target.value })}
-                    className="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                    className="w-full px-3 py-2 bg-sky-50/50 border border-sky-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-sky-500"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-mono text-slate-400 block mb-1">Follow-up Type</label>
+                  <label className="text-[10px] font-mono text-slate-600 block mb-1 font-semibold">Follow-up Type</label>
                   <select
                     value={newFollowUp.type}
                     onChange={e => setNewFollowUp({ ...newFollowUp, type: e.target.value as any })}
-                    className="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                    className="w-full px-3 py-2 bg-sky-50/50 border border-sky-200 rounded-xl text-slate-700 font-medium focus:outline-none focus:bg-white focus:border-sky-500"
                   >
                     <option value="Phone Call">Phone Call</option>
                     <option value="WhatsApp">WhatsApp</option>
@@ -451,44 +446,44 @@ export const CRMFollowupTracker: React.FC<Props> = ({
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-mono text-slate-400 block mb-1">Scheduled Date *</label>
+                  <label className="text-[10px] font-mono text-slate-600 block mb-1 font-semibold">Scheduled Date *</label>
                   <input
                     type="date"
                     required
                     value={newFollowUp.followup_date}
                     onChange={e => setNewFollowUp({ ...newFollowUp, followup_date: e.target.value })}
-                    className="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 font-mono"
+                    className="w-full px-3 py-2 bg-sky-50/50 border border-sky-200 rounded-xl text-slate-800 font-mono focus:outline-none focus:bg-white focus:border-sky-500"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="text-[10px] font-mono text-amber-300 block mb-1 font-bold">Planned Action Details *</label>
+                  <label className="text-[10px] font-mono text-amber-800 block mb-1 font-bold">Planned Action Details *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Call VP Ops to confirm commercial approval"
                     value={newFollowUp.next_action}
                     onChange={e => setNewFollowUp({ ...newFollowUp, next_action: e.target.value })}
-                    className="w-full px-3 py-1.5 bg-slate-900 border border-amber-500/50 rounded-lg text-slate-200"
+                    className="w-full px-3 py-2 bg-sky-50/50 border border-amber-300 rounded-xl text-slate-800 focus:outline-none focus:bg-white focus:border-amber-500"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-mono text-slate-400 block mb-1">Assigned Executive</label>
+                  <label className="text-[10px] font-mono text-slate-600 block mb-1 font-semibold">Assigned Executive</label>
                   <input
                     type="text"
                     value={newFollowUp.assigned_executive}
                     onChange={e => setNewFollowUp({ ...newFollowUp, assigned_executive: e.target.value })}
-                    className="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                    className="w-full px-3 py-2 bg-sky-50/50 border border-sky-200 rounded-xl text-slate-800 focus:outline-none focus:bg-white focus:border-sky-500"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-mono text-slate-400 block mb-1">Priority</label>
+                  <label className="text-[10px] font-mono text-slate-600 block mb-1 font-semibold">Priority</label>
                   <select
                     value={newFollowUp.priority}
                     onChange={e => setNewFollowUp({ ...newFollowUp, priority: e.target.value as any })}
-                    className="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-200"
+                    className="w-full px-3 py-2 bg-sky-50/50 border border-sky-200 rounded-xl text-slate-700 font-medium focus:outline-none focus:bg-white focus:border-sky-500"
                   >
                     <option value="Critical">Critical</option>
                     <option value="High">High</option>
@@ -497,17 +492,17 @@ export const CRMFollowupTracker: React.FC<Props> = ({
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex justify-end gap-3 pt-3 border-t border-sky-100">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition active:scale-95 cursor-pointer"
+                  className="px-5 py-2 bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-300 hover:to-sky-400 text-white font-bold text-xs rounded-xl shadow-md shadow-sky-400/20 transition active:scale-95 cursor-pointer"
                 >
                   Schedule Follow-up
                 </button>

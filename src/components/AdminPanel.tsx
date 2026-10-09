@@ -15,8 +15,9 @@ import { VERTICAL_CONFIGS } from '../lib/verticalConfig';
 import { 
   Users, UserPlus, Trash2, Key, RefreshCw, Check, AlertTriangle, 
   ShieldCheck, Mail, Shield, Plus, Layers, Filter, CheckCircle2, 
-  Sliders, Eye, Sparkles, ChevronRight, Lock, UserCheck, HardDrive
+  Sliders, Eye, Sparkles, ChevronRight, Lock, UserCheck, HardDrive, KeyRound
 } from 'lucide-react';
+import { STANDARD_USERS } from '../data/authConfig';
 
 interface AdminPanelProps {
   onUpdateState: (newState: AppState) => void;
@@ -599,6 +600,71 @@ export default function AdminPanel({ onUpdateState, currentUserEmail }: AdminPan
                 </tbody>
               </table>
             </div>
+
+            {/* Standard Role Credentials & RBAC Matrix */}
+            <div className="mt-6 pt-5 border-t border-slate-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-indigo-600" />
+                  <h4 className="text-xs font-bold text-slate-900 font-display uppercase tracking-wider">
+                    Standard Role Credentials &amp; RBAC Access Matrix
+                  </h4>
+                </div>
+                <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full font-bold">
+                  9 Standard Accounts Active
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mb-3">
+                Pre-configured standard credentials for each executive role. Admin and CEO have unrestricted clearance to all pages &amp; modules; all departmental heads are strictly locked to their respective domains.
+              </p>
+
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full text-left text-xs font-sans">
+                  <thead>
+                    <tr className="bg-slate-100 text-slate-700 text-[10.5px] uppercase font-mono tracking-wider border-b border-slate-200">
+                      <th className="py-2.5 px-3 font-bold">Role</th>
+                      <th className="py-2.5 px-3 font-bold">Username</th>
+                      <th className="py-2.5 px-3 font-bold">Default Password</th>
+                      <th className="py-2.5 px-3 font-bold">Access Scope</th>
+                      <th className="py-2.5 px-3 font-bold">Assigned Modules</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {STANDARD_USERS.map((user) => (
+                      <tr key={user.role} className="hover:bg-slate-50 transition">
+                        <td className="py-2.5 px-3 font-bold text-slate-900">
+                          <span className="flex items-center gap-1.5">
+                            <span className={`w-2 h-2 rounded-full ${user.fullAccess ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                            <span>{user.role}</span>
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-slate-700 font-semibold">
+                          <code>{user.username}</code>
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-slate-600">
+                          <code>{user.password}</code>
+                        </td>
+                        <td className="py-2.5 px-3">
+                          {user.fullAccess ? (
+                            <span className="px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                              Full Access (All 9)
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                              Restricted Scope
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-600 text-[11px] max-w-xs truncate" title={user.description}>
+                          {user.fullAccess ? 'All pages, modules & settings' : `${user.role.replace(' Head', '')} Dashboard & sub-modules`}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
 
         </div>

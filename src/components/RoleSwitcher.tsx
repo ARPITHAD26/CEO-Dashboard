@@ -10,6 +10,8 @@ interface RoleSwitcherProps {
 const ROLES_INFO: Record<Role, { name: string; desc: string; color: string }> = {
   CEO: { name: 'CEO & Founder', desc: 'Financial, Portfolio & Strategy', color: 'from-rose-500 to-red-600' },
   Admin: { name: 'Master System Admin', desc: 'Full Security Control Access', color: 'from-indigo-500 to-purple-600' },
+  'Government Tenders': { name: 'Government Tender Module', desc: 'Public Bids, Portals, Eligibility & Statutory Compliance', color: 'from-indigo-500 to-blue-600' },
+  'Private Tenders': { name: 'Private Tender Module', desc: 'Corporate proposals, negotiation guardrails & client pipeline', color: 'from-emerald-500 to-teal-600' },
   'Procurement Head': { name: 'Procurement Head', desc: 'SLA Assets & Partner Vendors', color: 'from-cyan-500 to-blue-600' },
   'Finance Head': { name: 'Finance Head', desc: 'Invoices, Payroll & Budgets', color: 'from-emerald-500 to-teal-600' },
   'BD Head': { name: 'Business Development Head', desc: 'Corporate Leads & Active Tenders', color: 'from-sky-400 to-sky-600' },
@@ -51,6 +53,8 @@ export default function RoleSwitcher({ currentRole, onChangeRole, onResetData }:
             >
               <option value="CEO">CEO (Strategic/Financial)</option>
               <option value="Admin">System Administrator</option>
+              <option value="Government Tenders">🏛️ Government Tender Module (GOV Series)</option>
+              <option value="Private Tenders">Private Tender Module (PVT Series)</option>
               <option value="Procurement Head">Procurement Head</option>
               <option value="Finance Head">Finance Head</option>
               <option value="BD Head">BD Head</option>

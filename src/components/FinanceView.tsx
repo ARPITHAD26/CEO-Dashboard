@@ -2,7 +2,8 @@ import { useState, FormEvent } from 'react';
 import { AppState, Invoice, Expense, Task } from '../types';
 import { logAuditEntry } from '../data/store';
 import { 
-  DollarSign, CheckCircle, Trash2, Edit2, PlusCircle, AlertTriangle 
+  DollarSign, CheckCircle, Trash2, Edit2, PlusCircle, AlertTriangle,
+  Maximize2, Sparkles, X, Download, ShieldCheck
 } from 'lucide-react';
 
 interface FinanceViewProps {
@@ -43,6 +44,7 @@ export default function FinanceView({
   const [editingExpId, setEditingExpId] = useState<string | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<'invoices' | 'expenses' | 'tasks'>(defaultTab);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
   // Stats
   const revenueMTD = state.invoices.reduce((sum, inv) => sum + (inv.amount ?? 0), 0);
@@ -176,6 +178,103 @@ export default function FinanceView({
 
   return (
     <div className="space-y-6">
+
+      {/* Toast Notification */}
+      {successMsg && (
+        <div className="fixed bottom-6 right-6 z-50 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-emerald-400/40 animate-bounce">
+          <CheckCircle className="w-5 h-5 text-white" />
+          <span className="text-sm font-semibold tracking-wide">{successMsg}</span>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* EXECUTIVE HEADER: Finance Head HD Portrait & Fiscal Cockpit   */}
+      {/* ------------------------------------------------------------- */}
+      <div className="bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 rounded-3xl p-6 shadow-sm border border-slate-200/90 dark:border-slate-800 relative overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+          
+          {/* Left: Finance Head HD Portrait + Identity & Cockpit Title */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            {/* Finance Head HD Photo Frame with Zoom & Crisp Resolution */}
+            <div 
+              className="relative group cursor-pointer shrink-0" 
+              onClick={() => setIsPhotoModalOpen(true)} 
+              title="Click to view full HD portrait of Finance Head"
+            >
+              {/* Outer decorative glowing ring */}
+              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-400 opacity-75 group-hover:opacity-100 blur-sm transition duration-300" />
+              
+              <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-white dark:border-slate-800 shadow-xl bg-slate-900">
+                <img 
+                  src="/finance-head-profile.jpg" 
+                  alt="Finance Head" 
+                  className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                  style={{ imageRendering: '-webkit-optimize-contrast' }}
+                  loading="eager"
+                />
+                
+                {/* Hover overlay with zoom icon */}
+                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 backdrop-blur-[2px]">
+                  <Maximize2 className="w-5 h-5 text-white drop-shadow" />
+                  <span className="text-[9px] font-mono font-bold text-white uppercase tracking-wider">View HD</span>
+                </div>
+
+                {/* HD Badge indicator */}
+                <div className="absolute bottom-1 right-1 bg-black/85 backdrop-blur-md px-1.5 py-0.5 rounded text-[8px] font-mono font-extrabold text-emerald-300 border border-emerald-400/40 flex items-center gap-0.5 shadow-sm">
+                  <Sparkles className="w-2.5 h-2.5 text-emerald-400 animate-pulse" />
+                  <span>HD</span>
+                </div>
+              </div>
+
+              {/* Online pulse indicator */}
+              <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white dark:border-slate-900"></span>
+              </span>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-emerald-500" />
+                  Finance &amp; Accounts Control Vertical
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-cyan-500" />
+                  Statutory &amp; Fiscal Governance
+                </span>
+              </div>
+              <h1 className="text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5 flex-wrap">
+                <span>Finance Head</span>
+                <span className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 font-sans tracking-normal bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
+                  Corporate Fiscal &amp; Invoicing Cockpit
+                </span>
+              </h1>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 flex items-center gap-2 font-medium">
+                <span>Enterprise Budgeting · Client Invoices (A/R) · Expense Disbursements &amp; Cash Flow Reconciliations</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Right: Quick Action Controls */}
+          <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-center">
+            <button
+              onClick={() => setActiveSubTab('invoices')}
+              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2 transition hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Record Invoice</span>
+            </button>
+            <button
+              onClick={() => setActiveSubTab('expenses')}
+              className="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 shadow-xs flex items-center gap-2 transition hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            >
+              <DollarSign className="w-4 h-4 text-emerald-500" />
+              <span>Disburse Expense</span>
+            </button>
+          </div>
+        </div>
+      </div>
       
       {/* Finance KPI row */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
@@ -591,6 +690,103 @@ export default function FinanceView({
         </div>
 
       </div>
+
+      {/* ------------------------------------------------------------- */}
+      {/* HD PORTRAIT LIGHTBOX MODAL                                    */}
+      {/* ------------------------------------------------------------- */}
+      {isPhotoModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setIsPhotoModalOpen(false)}
+        >
+          <div 
+            className="bg-[#0f172a] border border-emerald-500/40 rounded-3xl p-6 max-w-2xl w-full shadow-2xl space-y-4 text-slate-100 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <span>Finance Head</span>
+                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      Fiscal Executive
+                    </span>
+                  </h3>
+                  <p className="text-[10px] font-mono text-slate-400">Spoorthy Integrated Solutions · Executive HD Portrait</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsPhotoModalOpen(false)}
+                className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* High Definition Image Container */}
+            <div className="relative rounded-2xl overflow-hidden border-2 border-slate-700/80 bg-black shadow-inner flex items-center justify-center min-h-[380px] max-h-[520px]">
+              <img 
+                src="/finance-head-profile.jpg" 
+                alt="Finance Head - Executive Portrait" 
+                className="w-full max-h-[500px] object-contain"
+                style={{ imageRendering: '-webkit-optimize-contrast' }}
+              />
+              <div className="absolute top-2.5 left-2.5 bg-black/85 backdrop-blur-md px-2.5 py-1 rounded-lg border border-emerald-400/40 text-[9.5px] font-mono text-emerald-300 font-bold flex items-center gap-1.5 shadow-lg">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>ORIGINAL HD · 1024 × 682</span>
+              </div>
+            </div>
+
+            {/* Executive Details Card */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Designation</div>
+                <div className="font-bold text-slate-200 mt-0.5 truncate">Finance Head</div>
+              </div>
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Department</div>
+                <div className="font-bold text-slate-200 mt-0.5 truncate">Finance &amp; Accounts</div>
+              </div>
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Total Invoices</div>
+                <div className="font-bold text-emerald-400 mt-0.5 truncate">{state.invoices.length} Registered</div>
+              </div>
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Net Cash Flow</div>
+                <div className="font-bold text-cyan-400 mt-0.5 truncate">₹{(cashFlow ?? 0).toLocaleString()}</div>
+              </div>
+            </div>
+
+            {/* Footer with Details & Download */}
+            <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
+              <div className="text-[11px] text-slate-400 font-mono">
+                <span className="text-slate-200 font-bold">Scope:</span> Fiscal Control, Payroll &amp; Invoicing
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href="/finance-head-profile.jpg"
+                  download="Spoorthy_Finance_Head_Portrait_HD.jpg"
+                  className="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download HD</span>
+                </a>
+                <button
+                  onClick={() => setIsPhotoModalOpen(false)}
+                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

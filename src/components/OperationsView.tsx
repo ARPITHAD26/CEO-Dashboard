@@ -40,7 +40,7 @@ export default function OperationsView({
     { id: 'client_complaints', label: '4. Client Complaints (OpsVision)', icon: AlertCircle },
     { id: 'sla_telemetry', label: '5. SLA & QR Telemetry', icon: ShieldCheck },
     { id: 'readiness', label: '6. Site Readiness (Uniform/ID/Machinery)', icon: Wrench },
-    { id: 'attention', label: '7. Attention Required Radar', icon: AlertOctagon },
+    { id: 'attention', label: '7. Attention Required', icon: AlertOctagon },
     { id: 'sites', label: '8. Security Sites Master', icon: Layers },
     { id: 'incidents', label: '9. Security Incident Logs', icon: ShieldAlert },
     { id: 'tasks', label: '10. Operations Tasks', icon: CheckCircle },

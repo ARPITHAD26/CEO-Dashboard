@@ -11,7 +11,7 @@ import {
   TrendingUp, TrendingDown, DollarSign, Users, Award, AlertTriangle, 
   ArrowRight, Download, FileSpreadsheet, Calendar, ShieldCheck, 
   ShoppingBag, Briefcase, MapPin, MessageSquare, GraduationCap, CheckCircle, HelpCircle, Eye, Check,
-  QrCode, AlertCircle, Wrench, Layers, BookOpen, Clock, Camera, ChevronRight, Sparkles
+  QrCode, AlertCircle, Wrench, Layers, BookOpen, Clock, Camera, ChevronRight, Sparkles, Maximize2, X
 } from 'lucide-react';
 import { useState } from 'react';
 import { OpsDrillDownModal, OpsModalTab } from './OpsDrillDownModal';
@@ -31,6 +31,7 @@ export default function CEOView({ state, onNavigateToDataEntry }: CEOViewProps) 
   const [metricSearch, setMetricSearch] = useState('');
   const [isOpsModalOpen, setIsOpsModalOpen] = useState(false);
   const [opsModalTab, setOpsModalTab] = useState<OpsModalTab>('attendance');
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
   const openOpsDrillDown = (tab: OpsModalTab) => {
     setOpsModalTab(tab);
@@ -195,26 +196,111 @@ export default function CEOView({ state, onNavigateToDataEntry }: CEOViewProps) 
   return (
     <div className="space-y-8 animate-fade-in">
       
-      {/* 1. Header & Summary Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-card border border-border rounded-2xl shadow-sm relative overflow-hidden">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse"></span>
-            <span className="text-[10px] font-mono tracking-widest text-cyan-500 uppercase font-bold">DECISION SUPPORT ENGINE</span>
+      {/* 1. Executive Leadership Header Banner & CEO HD Profile */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-card via-card to-cyan-950/20 border border-border shadow-md p-6 lg:p-7">
+        {/* Ambient subtle glow background */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          
+          {/* Left: CEO HD Portrait + Identity & Cockpit Title */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            {/* CEO HD Photo Frame with Zoom & Crisp Resolution */}
+            <div 
+              className="relative group cursor-pointer shrink-0" 
+              onClick={() => setIsPhotoModalOpen(true)} 
+              title="Click to view full HD portrait"
+            >
+              {/* Outer decorative glowing ring */}
+              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-amber-400 opacity-70 group-hover:opacity-100 blur-sm transition duration-300" />
+              
+              <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-white/80 dark:border-slate-800 shadow-xl bg-slate-900">
+                <img 
+                  src="/ceo-profile.jpg" 
+                  alt="CEO - Spoorthy Integrated Solutions" 
+                  className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                  style={{ imageRendering: '-webkit-optimize-contrast' }}
+                  loading="eager"
+                />
+                
+                {/* Hover overlay with zoom icon */}
+                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 backdrop-blur-[2px]">
+                  <Maximize2 className="w-5 h-5 text-white drop-shadow" />
+                  <span className="text-[9px] font-mono font-bold text-white uppercase tracking-wider">View HD</span>
+                </div>
+
+                {/* HD Badge indicator */}
+                <div className="absolute bottom-1 right-1 bg-black/80 backdrop-blur-md px-1.5 py-0.5 rounded text-[8px] font-mono font-extrabold text-amber-300 border border-amber-400/40 flex items-center gap-0.5 shadow-sm">
+                  <Sparkles className="w-2.5 h-2.5 text-amber-400 animate-pulse" />
+                  <span>HD</span>
+                </div>
+              </div>
+
+              {/* Online pulse indicator */}
+              <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white dark:border-slate-900"></span>
+              </span>
+            </div>
+
+            {/* CEO Identity & Mission Text */}
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                  EXECUTIVE BOARD COMMAND
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-amber-500" />
+                  CHIEF EXECUTIVE OFFICER
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground font-display">
+                  CEO Strategic Operations Cockpit
+                </h2>
+              </div>
+
+              <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
+                Centralized executive command for <strong className="text-foreground font-semibold">Spoorthy Integrated Solutions Pvt. Ltd.</strong> Real-time cross-departmental telemetry, predictive indicators, statutory compliance &amp; strategic oversight.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] font-mono text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span className="text-foreground font-medium">Session: Active Live</span>
+                </span>
+                <span className="hidden sm:inline">•</span>
+                <span className="hidden sm:inline">Tier 1 Full RBAC Scope</span>
+                <span>•</span>
+                <button 
+                  onClick={() => setIsPhotoModalOpen(true)}
+                  className="text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Enlarge HD Portrait</span>
+                </button>
+              </div>
+            </div>
           </div>
-          <h2 className="text-xl font-bold tracking-tight text-foreground">CEO Strategic Operations Cockpit</h2>
-          <p className="text-xs text-muted-foreground max-w-xl">
-            Centralized monitoring for Spoorthy Integrated Solutions Pvt. Ltd. Track departmental health, address rule-based indicators, and deploy tasks across standard operational centers.
-          </p>
-        </div>
-        <div className="flex items-center gap-3 self-start md:self-center">
-          <button
-            onClick={exportAllKPIs}
-            className="px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-900 border border-indigo-200 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer active:scale-95"
-          >
-            <Download className="w-4 h-4 text-indigo-600" />
-            <span>Export Corporate KPIs (CSV)</span>
-          </button>
+
+          {/* Right Action buttons */}
+          <div className="flex flex-row lg:flex-col items-center lg:items-end justify-between lg:justify-center gap-2.5 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-border">
+            <button
+              onClick={exportAllKPIs}
+              className="px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer active:scale-95"
+            >
+              <Download className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <span>Export Corporate KPIs (CSV)</span>
+            </button>
+            <div className="text-[10px] font-mono text-muted-foreground flex items-center gap-1.5">
+              <Clock className="w-3 h-3 text-cyan-500" />
+              <span>Auto-refresh synced</span>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -599,7 +685,7 @@ export default function CEOView({ state, onNavigateToDataEntry }: CEOViewProps) 
                 onClick={() => openOpsDrillDown('attention')}
                 className="text-[11px] font-bold text-rose-700 dark:text-rose-300 hover:text-rose-800 flex items-center gap-1 bg-rose-100/80 dark:bg-rose-900/50 px-2.5 py-0.5 rounded-lg transition"
               >
-                <span>View Full Exception Radar (5)</span>
+                <span>View Full Exceptions (5)</span>
                 <ArrowRight className="w-3 h-3" />
               </button>
             </div>
@@ -866,7 +952,7 @@ export default function CEOView({ state, onNavigateToDataEntry }: CEOViewProps) 
       <div className="bg-card border border-border p-6 rounded-2xl shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-border pb-4 mb-6">
           <div>
-            <h3 className="text-sm font-bold text-foreground">DSS Analytical Charts Radar</h3>
+            <h3 className="text-sm font-bold text-foreground">DSS Analytical Charts</h3>
             <p className="text-xs text-muted-foreground">Interactive graphs showing organizational dynamics and performance</p>
           </div>
           <div className="flex items-center gap-2 bg-muted p-1 rounded-xl">
@@ -1102,6 +1188,76 @@ export default function CEOView({ state, onNavigateToDataEntry }: CEOViewProps) 
         opsAttention={state.opsAttentionItems || []}
         opsDefinitions={state.opsDataDefinitions || []}
       />
+
+      {/* CEO HD Portrait Full Lightbox Modal */}
+      {isPhotoModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in"
+          onClick={() => setIsPhotoModalOpen(false)}
+        >
+          <div 
+            className="relative bg-slate-900 border border-slate-700/80 rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white font-display">Chief Executive Officer</h4>
+                  <p className="text-[10px] font-mono text-slate-400">Spoorthy Integrated Solutions · Executive HD Portrait</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsPhotoModalOpen(false)}
+                className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* High Definition Image Container */}
+            <div className="relative rounded-2xl overflow-hidden border-2 border-slate-700/80 bg-black shadow-inner flex items-center justify-center">
+              <img 
+                src="/ceo-profile.jpg" 
+                alt="Chief Executive Officer - Spoorthy Integrated Solutions" 
+                className="w-full max-h-[500px] object-contain"
+                style={{ imageRendering: '-webkit-optimize-contrast' }}
+              />
+              <div className="absolute top-2.5 left-2.5 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-amber-400/40 text-[9.5px] font-mono text-amber-300 font-bold flex items-center gap-1.5 shadow-lg">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>ORIGINAL HD · 954 × 1024</span>
+              </div>
+            </div>
+
+            {/* Footer with Details & Download */}
+            <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+              <div className="text-[11px] text-slate-400 font-mono">
+                <span className="text-slate-200 font-bold">Scope:</span> Executive Board / CEO
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href="/ceo-profile.jpg"
+                  download="Spoorthy_CEO_Portrait_HD.jpg"
+                  className="px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download HD</span>
+                </a>
+                <button
+                  onClick={() => setIsPhotoModalOpen(false)}
+                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

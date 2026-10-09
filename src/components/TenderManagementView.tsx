@@ -198,16 +198,16 @@ export const TenderManagementView: React.FC<TenderManagementViewProps> = ({
   return (
     <div id="tender-management-root" className="space-y-6 bg-sky-50/60 border border-sky-200/80 p-6 rounded-3xl shadow-sm">
       {/* Top Banner & Action Header */}
-      <div className="bg-gradient-to-r from-sky-600 via-sky-700 to-blue-700 text-white p-6 rounded-2xl shadow-lg border border-sky-400/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="bg-white text-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200/90 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-white border border-white/30 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-sky-200" /> Tender Lifecycle Cockpit
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-slate-600" /> Tender Lifecycle Cockpit
             </span>
-            <span className="text-xs text-sky-100 font-mono">Total Bids: {(state.tenders || []).length}</span>
+            <span className="text-xs text-slate-400 font-mono">Total Bids: {(state.tenders || []).length}</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Tender &amp; Bid Management</h1>
-          <p className="text-sky-100 text-sm mt-1 max-w-2xl">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Tender &amp; Bid Management</h1>
+          <p className="text-slate-500 text-sm mt-1 max-w-2xl">
             End-to-end tracking from RFP opportunity identification, inter-departmental Go/No-Go clearances, corrigendum audits, pre-bid queries, to contract execution.
           </p>
         </div>
@@ -216,16 +216,16 @@ export const TenderManagementView: React.FC<TenderManagementViewProps> = ({
           <button
             id="btn-add-tender"
             onClick={() => setShowAddTenderModal(true)}
-            className="px-4 py-2 bg-white hover:bg-sky-50 text-sky-800 text-sm font-bold rounded-xl shadow transition flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2 bg-white hover:bg-sky-50 text-sky-700 border border-sky-300 text-sm font-bold rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer"
           >
-            <Plus className="w-4 h-4 text-sky-700" /> Add New Tender
+            <Plus className="w-4 h-4 text-sky-600" /> Add New Tender
           </button>
           <button
             id="btn-add-gonogo"
             onClick={() => setShowGoNoGoModal(true)}
-            className="px-3.5 py-2 bg-sky-800 hover:bg-sky-900 text-sky-100 text-sm font-medium rounded-xl border border-sky-400/40 transition flex items-center gap-2 cursor-pointer"
+            className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-xl border border-slate-200 transition flex items-center gap-2 cursor-pointer shadow-sm"
           >
-            <UserCheck className="w-4 h-4 text-sky-300" /> Clear Go/No-Go
+            <UserCheck className="w-4 h-4 text-slate-500" /> Clear Go/No-Go
           </button>
         </div>
       </div>

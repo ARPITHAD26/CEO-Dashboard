@@ -1,4 +1,4 @@
-export type Role = 'CEO' | 'Admin' | 'Procurement Head' | 'Finance Head' | 'BD Head' | 'HR Head' | 'Operations Head' | 'Training Head' | 'IT Head';
+export type Role = 'CEO' | 'Admin' | 'Government Tenders' | 'Private Tenders' | 'Procurement Head' | 'Finance Head' | 'BD Head' | 'HR Head' | 'Operations Head' | 'Training Head' | 'IT Head';
 
 export interface SubRoleDefinition {
   id: string;
@@ -11,6 +11,7 @@ export interface SubRoleDefinition {
 }
 
 export interface UserAccount {
+  username?: string;
   email: string;
   name: string;
   role: Role;
@@ -233,6 +234,196 @@ export interface PbgRecord {
   released: boolean;
   release_confirmation_no?: string;
   status: 'Valid' | 'Expiring Soon' | 'Expired' | 'Released';
+}
+
+// -------------------------------------------------------------
+// GOVERNMENT TENDER MODULE (Separate from Private Tenders)
+// -------------------------------------------------------------
+export type GovTenderStage =
+  | 'Tender Identified'
+  | 'Documents Downloaded'
+  | 'Initial Screening'
+  | 'HR/Finance/Ops Review'
+  | 'Go/No-Go'
+  | 'Tender Preparation'
+  | 'Pre-Bid Meeting'
+  | 'Queries Raised'
+  | 'Corrigendum/Addendum'
+  | 'Final Bid Preparation'
+  | 'Management Approval'
+  | 'EMD/Tender Fee Payment'
+  | 'Online Submission'
+  | 'Technical Opening'
+  | 'Technical Qualified'
+  | 'Technical Disqualified'
+  | 'Financial Bid Opening'
+  | 'L1 Position'
+  | 'L2 Position'
+  | 'L3 Position'
+  | 'E-Reverse Auction'
+  | 'L1 Negotiation'
+  | 'LOI/LOA Received'
+  | 'Work Order Received'
+  | 'PBG Submitted'
+  | 'Contract Agreement'
+  | 'Contract Execution'
+  | 'Renewal/Extension'
+  | 'Closed'
+  | 'Won'
+  | 'Lost'
+  | 'Cancelled'
+  | 'Re-Tendered';
+
+export interface GovTenderEligibilityCriterion {
+  criterion: string;
+  required_value: string;
+  our_value: string;
+  status: 'Met' | 'Not Met' | 'Partially Met' | 'Under Review';
+  remarks?: string;
+}
+
+export interface GovTenderDocument {
+  doc_name: string;
+  doc_type: 'Annexure' | 'Certificate' | 'Undertaking' | 'Technical' | 'Financial' | 'DSC' | 'EMD' | 'Other';
+  mandatory: boolean;
+  preparation_status: 'Not Started' | 'In Progress' | 'Ready' | 'Uploaded' | 'Not Applicable';
+  responsible_person: string;
+  due_date?: string;
+  remarks?: string;
+}
+
+export interface GovTenderCertificate {
+  cert_name: string; // GST, PAN, PF, ESI, Labour Licence, ISO, MSME, etc.
+  cert_number: string;
+  validity_from: string;
+  validity_to: string;
+  status: 'Valid' | 'Expiring Soon' | 'Expired' | 'Renewal In Progress';
+}
+
+export interface GovTenderStatutoryCost {
+  component: string; // Minimum Wage, PF, ESI, Bonus, Uniform, Leave Wages, etc.
+  applicable: boolean;
+  rate_or_amount: number;
+  basis: string; // e.g. "Per person/month", "% of basic", etc.
+  validated_by_hr: boolean;
+  validation_date?: string;
+  remarks?: string;
+}
+
+export interface GovTenderEvaluationEntry {
+  stage: 'Technical Opening' | 'Technical Result' | 'Clarification' | 'Financial Opening' | 'L-Position' | 'E-Reverse Auction' | 'Negotiation';
+  date: string;
+  description: string;
+  our_position?: string;
+  l1_rate?: number;
+  our_rate?: number;
+  rate_difference_pct?: number;
+  remarks?: string;
+}
+
+export interface GovTenderCorrigendumEntry {
+  corrigendum_no: string;
+  issue_date: string;
+  description: string;
+  changes_summary: string;
+  revised_submission_date?: string;
+  revised_emd?: number;
+  revised_boq?: boolean;
+  revised_eligibility?: string;
+  management_reviewed: boolean;
+  reviewed_by?: string;
+  review_date?: string;
+}
+
+export interface GovernmentTender {
+  id: string; // GOV/2026/001 series
+  // Tender Identification
+  government_category: 'Central' | 'State' | 'PSU' | 'Municipal' | 'Other';
+  department: string;
+  tendering_authority: string;
+  client_name: string;
+  tender_name: string;
+  nit_reference_number: string;
+  portal_name: 'GeM' | 'CPPP' | 'State Portal' | 'IREPS' | 'Other';
+  portal_tender_id: string;
+  tender_url: string;
+  scope_of_work: string;
+  location: string;
+  tender_type: 'Open' | 'Limited' | 'Single' | 'Rate Contract' | 'EOI' | 'RFP';
+  estimated_tender_value: number;
+  contract_period: string;
+
+  // Dates
+  publication_date: string;
+  doc_download_start: string;
+  doc_download_end: string;
+  pre_bid_meeting_date?: string;
+  query_submission_last_date?: string;
+  last_date_of_submission: string;
+  technical_bid_opening_date?: string;
+  financial_bid_opening_date?: string;
+  bid_validity_period: string;
+
+  // Financial and Security
+  emd_amount: number;
+  emd_mode: 'Online' | 'DD' | 'BG' | 'Bid Security Declaration';
+  emd_exemption_applicable: boolean;
+  emd_exemption_type?: 'MSME' | 'Startup' | 'Other';
+  emd_exemption_certificate_ref?: string;
+  tender_fee: number;
+  processing_fee: number;
+  estimated_pbg_percentage: number;
+  security_deposit_terms: string;
+
+  // Eligibility & Compliance
+  eligibility_criteria: GovTenderEligibilityCriterion[];
+  review_considerations?: Record<string, boolean>;
+  required_certificates: GovTenderCertificate[];
+  dsc_holder: string;
+  dsc_expiry: string;
+  integrity_pact_signed: boolean;
+  blacklisting_declaration: 'Clear' | 'Pending' | 'Issue Found';
+
+  // Document Checklist
+  document_checklist: GovTenderDocument[];
+
+  // Corrigendum Register
+  corrigendums: GovTenderCorrigendumEntry[];
+
+  // Evaluation Tracker
+  evaluation_entries: GovTenderEvaluationEntry[];
+
+  // Statutory Cost Check (HR Review)
+  statutory_costs: GovTenderStatutoryCost[];
+
+  // Responsibility
+  tender_owner: string;
+  procurement_executive: string;
+  supporting_team: string[];
+  operations_spoc: string;
+  finance_spoc: string;
+  hr_spoc: string;
+  gm_approval: 'Pending' | 'Approved' | 'Rejected';
+  ceo_approval: 'Pending' | 'Approved' | 'Not Required' | 'Rejected';
+
+  // Status & Result
+  status: GovTenderStage;
+  result?: 'Won' | 'Lost' | 'Cancelled' | 'Re-Tendered';
+  result_reason?: string;
+  competitor_l1_rate?: number;
+  competitor_names?: string;
+
+  // Portal Tracking
+  portal_login_owner: string;
+  dsc_availability: 'Available' | 'Not Available' | 'Expired';
+  upload_status: 'Not Started' | 'Partial' | 'Complete' | 'Acknowledged';
+  acknowledgement_receipt?: string;
+
+  // Eligibility Readiness Score
+  eligibility_score?: number; // 0-100
+
+  created_at: string;
+  updated_at?: string;
 }
 
 // -------------------------------------------------------------
@@ -721,6 +912,97 @@ export interface ITSecurityCheck {
   details: string;
 }
 
+export type PrivateTenderStage =
+  | 'Enquiry Received' | 'NDA' | 'Requirement Understanding / Site Visit' | 'Initial Screening'
+  | 'HR / Finance / Operations Review' | 'GO / NO-GO' | 'Proposal Preparation' | 'Clarifications / Queries'
+  | 'Technical Presentation' | 'Commercial Proposal Submission' | 'Negotiation' | 'Management Approval of Final Offer'
+  | 'Final Offer Submitted' | 'Client Decision' | 'LOI / Work Order / PO' | 'Security Deposit / PBG'
+  | 'Service Agreement' | 'Contract Execution' | 'Renewal' | 'Closure' | 'Won' | 'Lost';
+
+export interface PrivateTenderNegotiation {
+  id: string;
+  round: number;
+  date: string;
+  client_ask: string;
+  our_offer: string;
+  revised_rate: number;
+  revised_margin: number;
+  approval_taken: 'Pending' | 'GM Approved' | 'CEO Approved';
+  outcome: string;
+}
+
+export interface PrivateTenderProposalVersion {
+  id: string;
+  version: string;
+  date: string;
+  offer_value: number;
+  document_url: string;
+  approval: 'Pending' | 'GM Approved' | 'CEO Approved';
+  notes: string;
+}
+
+export interface PrivateTenderFollowUp {
+  id: string;
+  date: string;
+  type: 'Meeting' | 'Call' | 'Presentation' | 'Email';
+  summary: string;
+  next_action: string;
+  next_action_date: string;
+}
+
+export interface PrivateTender {
+  id: string;
+  client_category: 'Corporate' | 'Industrial' | 'Commercial' | 'Institutional' | 'Residential' | 'Individual';
+  client_name: string;
+  parent_company: string;
+  enquiry_reference: string;
+  enquiry_source: 'Direct' | 'Referral' | 'Business development' | 'Existing client' | 'Portal';
+  scope_of_work: string;
+  location: string;
+  estimated_contract_value: number;
+  contract_period: string;
+  enquiry_date: string;
+  site_visit_date: string;
+  proposal_due_date: string;
+  presentation_date: string;
+  expected_decision_date: string;
+  expected_start_date: string;
+  pricing_model: 'Fixed' | 'Per head' | 'Per unit' | 'Cost-plus' | 'Management fee';
+  proposed_margin: number;
+  minimum_margin: number;
+  payment_terms: string;
+  credit_period_days: number;
+  security_deposit_requested: string;
+  price_escalation_clause: string;
+  competitors: string;
+  decision_maker: string;
+  client_spoc: string;
+  relationship_status: 'New' | 'Existing' | 'Lapsed';
+  previous_business_history: string;
+  vendor_registration_status: string;
+  nda_status: 'Required' | 'Not Required' | 'Pending' | 'Signed';
+  business_owner: string;
+  proposal_owner: string;
+  procurement_executive: string;
+  operations_spoc: string;
+  finance_spoc: string;
+  hr_spoc: string;
+  gm_approval: 'Pending' | 'Approved' | 'Rejected';
+  ceo_approval: 'Pending' | 'Approved' | 'Rejected' | 'Not Required';
+  stage: PrivateTenderStage;
+  probability: number;
+  credit_standing: 'Not Reviewed' | 'Good' | 'Watch' | 'High Risk';
+  payment_history: string;
+  finance_review: 'Pending' | 'Cleared' | 'Hold';
+  credit_notes: string;
+  go_no_go: 'Pending' | 'GO' | 'NO-GO';
+  review_considerations?: Record<string, boolean>;
+  created_at: string;
+  negotiations: PrivateTenderNegotiation[];
+  proposal_versions: PrivateTenderProposalVersion[];
+  follow_ups: PrivateTenderFollowUp[];
+}
+
 export interface AppState {
   purchaseRequests: PurchaseRequest[];
   vendors: Vendor[];
@@ -753,6 +1035,9 @@ export interface AppState {
   clientEscalations: ClientEscalation[];
   emdRefunds: EmdRecord[];
   pbgGuarantees: PbgRecord[];
+  // Government Tender Module (Separate Panel)
+  governmentTenders?: GovernmentTender[];
+  privateTenders?: PrivateTender[];
   indents: Indent[];
   vendorQuotations: VendorQuotation[];
   comparativeStatements: ComparativeStatement[];
@@ -781,6 +1066,9 @@ export interface AppState {
   crmClients?: CRMClientMaster[];
   crmTeamStatuses: CRMTeamStatus[];
   crmTeamStatus?: CRMTeamStatus[];
+  crmDiaryTasks?: CRMDiaryTask[];
+  crmWorkflowRules?: CRMWorkflowRule[];
+  crmWorkflowLogs?: CRMWorkflowExecutionLog[];
   // -------------------------------------------------------------
   // CEO PERSONAL MANAGEMENT WORKSPACE & PORTFOLIOS (T&D, IT, INITIATIVES, MEETINGS)
   // -------------------------------------------------------------
@@ -1261,6 +1549,77 @@ export interface CRMMeeting {
   next_action: string;
   next_meeting_date?: string;
   conducted_by: string;
+  // Diary & Calendar Maintenance Extensions
+  meeting_link?: string;
+  meeting_platform?: 'Google Meet' | 'Microsoft Teams' | 'Zoom' | 'Custom';
+  meeting_link_sent?: boolean;
+  meeting_link_sent_at?: string;
+  attendee_emails?: string;
+  attendee_role?: 'President' | 'BD Team' | 'Joint Executive' | 'Client Executive';
+  status?: 'Scheduled' | 'Completed' | 'Rescheduled' | 'Cancelled';
+  reminder_minutes?: number;
+  reminder_sent?: boolean;
+  location?: string;
+  notes?: string;
+  workflow_triggered?: boolean;
+}
+
+export type CRMDiaryTaskPriority = 'Critical' | 'High' | 'Medium' | 'Low';
+export type CRMDiaryTaskStatus = 'Pending' | 'In Progress' | 'Completed' | 'Deferred';
+export type CRMDiaryTargetRole = 'President' | 'BD Team' | 'Both';
+export type CRMDiaryTaskCategory = 
+  | 'Meeting Follow-up' 
+  | 'Proposal Dispatch' 
+  | 'Client Review' 
+  | 'President Reminder' 
+  | 'Team Action' 
+  | 'Contract Renewal' 
+  | 'Other';
+
+export interface CRMDiaryTask {
+  id: string;
+  title: string;
+  lead_id?: string;
+  client_id?: string;
+  company_name?: string;
+  target_role: CRMDiaryTargetRole;
+  assigned_to: string;
+  due_date: string; // YYYY-MM-DD
+  due_time?: string; // HH:mm
+  priority: CRMDiaryTaskPriority;
+  status: CRMDiaryTaskStatus;
+  category: CRMDiaryTaskCategory;
+  description?: string;
+  reminder_minutes_before?: number;
+  reminder_status?: 'Scheduled' | 'Sent' | 'Dismissed';
+  created_at: string;
+  completed_at?: string;
+  linked_meeting_id?: string;
+  automated_by_rule?: string;
+}
+
+export interface CRMWorkflowRule {
+  id: string;
+  name: string;
+  description: string;
+  trigger: 'on_meeting_scheduled' | 'on_meeting_completed' | 'on_meeting_rescheduled' | 'on_outcome_followup' | 'on_task_overdue';
+  action: 'send_meeting_link' | 'create_president_task' | 'create_bd_task' | 'send_whatsapp_alert' | 'sync_dar';
+  is_active: boolean;
+  target_audience: 'President' | 'BD Team' | 'Both';
+  auto_generate_link?: boolean;
+}
+
+export interface CRMWorkflowExecutionLog {
+  id: string;
+  rule_id: string;
+  rule_name: string;
+  triggered_at: string;
+  trigger_event: string;
+  entity_id: string;
+  entity_name: string;
+  details: string;
+  status: 'Success' | 'Queued' | 'Alert Sent';
+  recipient: string;
 }
 
 export interface CRMQuotation {
@@ -1282,6 +1641,10 @@ export interface CRMQuotation {
   followup_date: string;
   status: CRMQuotationStatus;
   notes?: string;
+  document_name?: string;
+  document_type?: 'pdf' | 'word' | 'excel';
+  document_size?: string;
+  document_data?: string;
 }
 
 export interface CRMDailyActivityReport {

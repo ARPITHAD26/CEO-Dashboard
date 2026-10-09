@@ -7,7 +7,8 @@ import {
   GraduationCap, CheckCircle, Trash2, Plus, Calendar, 
   ShieldAlert, Award, FileText, Image as ImageIcon, Users, 
   Search, Check, X, Bookmark, Building2, BookOpen, UserCheck,
-  ExternalLink, Filter, Star, Sparkles, MapPin, Phone, Mail, ShieldCheck
+  ExternalLink, Filter, Star, Sparkles, MapPin, Phone, Mail, ShieldCheck, RotateCcw,
+  Maximize2, Download
 } from 'lucide-react';
 
 interface TrainingViewProps {
@@ -38,6 +39,7 @@ interface MasterTrainingTopic {
   target_audience: string;
   description: string;
   syllabus: string[];
+  is_custom?: boolean;
 }
 
 const DEFAULT_MASTER_TOPICS: MasterTrainingTopic[] = [
@@ -161,9 +163,38 @@ export default function TrainingView({
   const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
   const [evidenceViewerFile, setEvidenceViewerFile] = useState<ContextFile | null>(null);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
-  // Master topics list (with custom added ones)
-  const [masterTopics, setMasterTopics] = useState<MasterTrainingTopic[]>(DEFAULT_MASTER_TOPICS);
+  // Master topics list (with custom added ones and persistence)
+  const MASTER_TOPICS_STORAGE_KEY = 'spoorthy_training_master_topics';
+  const [masterTopics, setMasterTopics] = useState<MasterTrainingTopic[]>(() => {
+    try {
+      const saved = localStorage.getItem(MASTER_TOPICS_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error('Error loading master training topics:', e);
+    }
+    return DEFAULT_MASTER_TOPICS;
+  });
+
+  const updateMasterTopics = (newTopics: MasterTrainingTopic[]) => {
+    setMasterTopics(newTopics);
+    try {
+      localStorage.setItem(MASTER_TOPICS_STORAGE_KEY, JSON.stringify(newTopics));
+    } catch (e) {
+      console.error('Error saving master training topics:', e);
+    }
+  };
+
+  const addedTopicsCount = useMemo(() => {
+    return masterTopics.filter(t => t.is_custom || !DEFAULT_MASTER_TOPICS.some(d => d.id === t.id)).length;
+  }, [masterTopics]);
+
   const [topicSearch, setTopicSearch] = useState('');
   const [topicCategoryFilter, setTopicCategoryFilter] = useState('All');
   const [isAddingNewTopic, setIsAddingNewTopic] = useState(false);
@@ -461,6 +492,19 @@ export default function TrainingView({
     triggerSuccess(`Client Facility "${newSite.name}" registered successfully!`);
   };
 
+  // Remove a Facility Unit (from sites list)
+  const handleDeleteFacility = (facilityId: string, facilityName: string) => {
+    if (window.confirm(`Remove "${facilityName}" from the Facility Master? This cannot be undone.`)) {
+      const nextState = {
+        ...state,
+        sites: state.sites.filter(s => s.id !== facilityId)
+      };
+      logAuditEntry(nextState, currentUserEmail, 'DELETE', 'Site', facilityId, `Removed client facility unit: ${facilityName}`);
+      onUpdateState(nextState);
+      triggerSuccess(`Facility "${facilityName}" removed successfully.`);
+    }
+  };
+
   // Add New Training Topic
   const handleCreateTopic = (e: FormEvent) => {
     e.preventDefault();
@@ -476,10 +520,11 @@ export default function TrainingView({
       frequency_days: Number(newTopicForm.frequency_days) || 90,
       target_audience: newTopicForm.target_audience || 'Facility Staff & Security Personnel',
       description: newTopicForm.description || 'Standard operating procedure compliance curriculum.',
-      syllabus: newTopicForm.syllabus && newTopicForm.syllabus.length > 0 ? newTopicForm.syllabus : ['Module Introduction & Objectives', 'Practical Drill Demonstration', 'Written & Oral Assessment']
+      syllabus: newTopicForm.syllabus && newTopicForm.syllabus.length > 0 ? newTopicForm.syllabus : ['Module Introduction & Objectives', 'Practical Drill Demonstration', 'Written & Oral Assessment'],
+      is_custom: true
     };
 
-    setMasterTopics([createdTopic, ...masterTopics]);
+    updateMasterTopics([createdTopic, ...masterTopics]);
     setIsAddingNewTopic(false);
     setNewTopicForm({
       topic_name: '',
@@ -495,9 +540,39 @@ export default function TrainingView({
     triggerSuccess(`Training Curriculum Topic "${createdTopic.topic_name}" added!`);
   };
 
+  // Remove an individual Training Topic from Master Catalog
+  const handleDeleteTopic = (topicId: string, topicName: string) => {
+    if (window.confirm(`Are you sure you want to remove "${topicName}" from the Master Catalog?`)) {
+      const updated = masterTopics.filter(t => t.id !== topicId);
+      updateMasterTopics(updated);
+      triggerSuccess(`Training Topic "${topicName}" removed from Master Catalog.`);
+    }
+  };
+
+  // Remove all custom added topics from Master Catalog
+  const handleRemoveAllAddedTopics = () => {
+    const customCount = masterTopics.filter(t => t.is_custom || !DEFAULT_MASTER_TOPICS.some(d => d.id === t.id)).length;
+    if (customCount === 0) {
+      triggerSuccess('No custom added topics found to remove.');
+      return;
+    }
+    if (window.confirm(`Are you sure you want to remove all ${customCount} custom added topic(s)?`)) {
+      updateMasterTopics(DEFAULT_MASTER_TOPICS);
+      triggerSuccess(`Removed ${customCount} added topic(s). Standard catalog restored.`);
+    }
+  };
+
+  // Reset entire Master Catalog to standard default topics
+  const handleResetToDefaultTopics = () => {
+    if (window.confirm('Reset Master Training Catalog back to standard default modules?')) {
+      updateMasterTopics(DEFAULT_MASTER_TOPICS);
+      triggerSuccess('Master Training Catalog restored to standard default modules.');
+    }
+  };
+
   // Add New Certified Trainer
-  const handleCreateTrainer = (e: FormEvent) => {
-    e.preventDefault();
+  const handleCreateTrainer = (e?: FormEvent) => {
+    if (e) e.preventDefault();
     if (!newTrainerForm.name) return;
 
     const newTrainerId = `TRN-${Date.now()}`;
@@ -514,9 +589,10 @@ export default function TrainingView({
       rating: Number(newTrainerForm.rating) || 4.8
     };
 
+    const updatedTrainers = [newTrainer, ...(state.tdTrainers || [])];
     const nextState = {
       ...state,
-      tdTrainers: [newTrainer, ...state.tdTrainers]
+      tdTrainers: updatedTrainers
     };
 
     logAuditEntry(nextState, currentUserEmail, 'CREATE', 'Trainer', newTrainerId, `Registered certified trainer: ${newTrainer.name}`);
@@ -531,6 +607,16 @@ export default function TrainingView({
       rating: 4.8
     });
     triggerSuccess(`Certified Trainer "${newTrainer.name}" registered!`);
+  };
+
+  // Delete a Certified Trainer
+  const handleDeleteTrainer = (trainerId: string, trainerName: string) => {
+    if (!window.confirm(`Remove certified trainer "${trainerName}" from the directory? This action cannot be undone.`)) return;
+    const updatedTrainers = (state.tdTrainers || []).filter(t => t.id !== trainerId);
+    const nextState = { ...state, tdTrainers: updatedTrainers };
+    logAuditEntry(nextState, currentUserEmail, 'DELETE', 'Trainer', trainerId, `Removed certified trainer: ${trainerName}`);
+    onUpdateState(nextState);
+    triggerSuccess(`Trainer "${trainerName}" removed from directory.`);
   };
 
   // Quick Select Helpers
@@ -631,20 +717,63 @@ export default function TrainingView({
       {/* ------------------------------------------------------------- */}
       {/* HEADER & EXECUTIVE SUMMARY BAR                                */}
       {/* ------------------------------------------------------------- */}
-      <div className="bg-gradient-to-r from-sky-600 via-sky-700 to-blue-700 text-white rounded-3xl p-6 shadow-xl border border-sky-400/30 relative overflow-hidden">
+      <div className="bg-white text-slate-800 rounded-3xl p-6 shadow-sm border border-slate-200/90 relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="px-3 py-1 bg-white/20 text-white border border-white/30 rounded-full text-xs font-semibold tracking-wider uppercase flex items-center gap-1.5">
-                <ShieldAlert className="w-3.5 h-3.5 text-sky-200" />
-                Compliance Training Programs &amp; Competency Scoreboard
-              </span>
-              <span className="text-xs text-sky-100 font-mono">Plan → Conduct → Attendance → Evaluation → Evidence</span>
+          {/* Left: Training Head HD Portrait + Identity & Cockpit Title */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            {/* Training Head HD Photo Frame with Zoom & Crisp Resolution */}
+            <div 
+              className="relative group cursor-pointer shrink-0" 
+              onClick={() => setIsPhotoModalOpen(true)} 
+              title="Click to view full HD portrait of Training Head"
+            >
+              {/* Outer decorative glowing ring */}
+              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-fuchsia-500 via-pink-500 to-sky-400 opacity-75 group-hover:opacity-100 blur-sm transition duration-300" />
+              
+              <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-white shadow-xl bg-slate-900">
+                <img 
+                  src="/training-head-profile.jpg" 
+                  alt="Training Head" 
+                  className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                  style={{ imageRendering: '-webkit-optimize-contrast' }}
+                  loading="eager"
+                />
+                
+                {/* Hover overlay with zoom icon */}
+                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 backdrop-blur-[2px]">
+                  <Maximize2 className="w-5 h-5 text-white drop-shadow" />
+                  <span className="text-[9px] font-mono font-bold text-white uppercase tracking-wider">View HD</span>
+                </div>
+
+                {/* HD Badge indicator */}
+                <div className="absolute bottom-1 right-1 bg-black/85 backdrop-blur-md px-1.5 py-0.5 rounded text-[8px] font-mono font-extrabold text-fuchsia-300 border border-fuchsia-400/40 flex items-center gap-0.5 shadow-sm">
+                  <Sparkles className="w-2.5 h-2.5 text-fuchsia-400 animate-pulse" />
+                  <span>HD</span>
+                </div>
+              </div>
             </div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-              Compliance Training Radar &amp; T&amp;D Cockpit
-            </h1>
-          
+
+            <div>
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-bold bg-fuchsia-500/10 text-fuchsia-700 border border-fuchsia-500/30 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-fuchsia-600" />
+                  Training &amp; Skill Development Vertical
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live Operational Oversight
+                </span>
+              </div>
+              <h1 className="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5 flex-wrap">
+                <span>Training Head</span>
+                <span className="text-xs sm:text-sm font-semibold text-slate-600 font-sans tracking-normal bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                  Compliance Training &amp; T&amp;D Cockpit
+                </span>
+              </h1>
+              <p className="text-xs text-slate-600 mt-1 flex items-center gap-2 font-medium">
+                <span>Compliance Training Master · Unit / Client Facility Radar &amp; Certified Trainer Command</span>
+              </p>
+            </div>
           </div>
 
           {/* Quick Action Buttons: Record Session + Master Popups */}
@@ -676,7 +805,7 @@ export default function TrainingView({
               }}
               className="px-4 py-2.5 bg-white hover:bg-sky-50 text-sky-900 text-xs font-bold rounded-2xl shadow-lg flex items-center gap-2 transition hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
             >
-              <Plus className="w-4 h-4 text-sky-700" />
+              <Plus className="w-4 h-4 text-sky-500" />
               <span>+ Record Conducted Session</span>
             </button>
           </div>
@@ -736,7 +865,7 @@ export default function TrainingView({
         {/* ------------------------------------------------------------- */}
         <div className="flex items-center gap-2 mt-5 pt-4 border-t border-sky-400/30 overflow-x-auto pb-1">
           {[
-            { id: 'radar', label: 'Compliance Radar & Standards', icon: ShieldAlert, badge: `${tdComplianceRadar.length} Standards` },
+            { id: 'radar', label: 'Compliance & Standards', icon: ShieldAlert, badge: `${tdComplianceRadar.length} Standards` },
             { id: 'calendar', label: 'Live Training Calendar & Board', icon: Calendar, badge: `${filteredSessions.length} Sessions` },
             { id: 'planning', label: 'Annual & Unit Plans', icon: Bookmark, badge: `${tdPlans.length} Plans` },
             { id: 'trainers', label: 'Trainer Utilization & Ratings', icon: Users, badge: `${tdTrainers.length} Trainers` },
@@ -771,7 +900,7 @@ export default function TrainingView({
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* 1. COMPLIANCE RADAR & STATUTORY EXPIRY WATCH                  */}
+      {/* 1. COMPLIANCE & STATUTORY EXPIRY WATCH                        */}
       {/* ------------------------------------------------------------- */}
       {activeTab === 'radar' && (
         <div className="space-y-6">
@@ -824,7 +953,7 @@ export default function TrainingView({
             </div>
           </div>
 
-          {/* Compliance Radar Matrix */}
+          {/* Compliance Matrix */}
           <div className="bg-white border border-sky-200 rounded-3xl p-6 shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
@@ -1386,7 +1515,7 @@ export default function TrainingView({
               <div className="flex items-center gap-2.5">
                 <Building2 className="w-6 h-6 text-sky-200" />
                 <div>
-                  <h3 className="text-lg font-bold">Unit / Client Facility Master &amp; Deployment Radar</h3>
+                  <h3 className="text-lg font-bold">Unit / Client Facility Master &amp; Deployment</h3>
                   <p className="text-xs text-sky-100">Browse operational client units, compliance health, manpower strength and training schedules.</p>
                 </div>
               </div>
@@ -1515,7 +1644,15 @@ export default function TrainingView({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-end gap-2 pt-1 border-t border-sky-100">
+                    <div className="flex items-center justify-between pt-1 border-t border-sky-100">
+                      <button
+                        onClick={() => handleDeleteFacility(facility.id, facility.name)}
+                        title={`Remove "${facility.name}" from Facility Master`}
+                        className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Remove</span>
+                      </button>
                       <button
                         onClick={() => selectFacilityForSession(facility.name)}
                         className="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
@@ -1600,13 +1737,38 @@ export default function TrainingView({
                 </select>
               </div>
 
-              <button
-                onClick={() => setIsAddingNewTopic(!isAddingNewTopic)}
-                className="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{isAddingNewTopic ? 'Close Form' : '+ Add New Training Topic'}</span>
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                {addedTopicsCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAllAddedTopics}
+                    className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                    title="Remove all custom added topics from the catalog"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                    <span>Remove Added Topics ({addedTopicsCount})</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleResetToDefaultTopics}
+                  className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                  title="Reset catalog back to standard default modules"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Reset Default</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsAddingNewTopic(!isAddingNewTopic)}
+                  className="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{isAddingNewTopic ? 'Close Form' : '+ Add New Training Topic'}</span>
+                </button>
+              </div>
             </div>
 
             {/* Add New Topic Form (Collapsible) */}
@@ -1696,63 +1858,85 @@ export default function TrainingView({
             {/* Topics Cards List */}
             <div className="px-6 py-2 overflow-y-auto flex-1 space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {filteredTopics.map((topic) => (
-                  <div key={topic.id} className="p-4 bg-sky-50/50 border border-sky-200 hover:border-sky-400 hover:bg-sky-50/90 rounded-2xl transition space-y-3 shadow-xs">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200">
-                          {topic.category}
-                        </span>
-                        <h4 className="text-sm font-bold text-slate-900 mt-1.5">{topic.topic_name}</h4>
-                        <p className="text-[11px] text-slate-600 mt-1 line-clamp-2">{topic.description}</p>
-                      </div>
-                      {topic.practical_drill_required && (
-                        <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-300 rounded-full text-[9px] font-bold uppercase shrink-0">
-                          Drill Req.
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2 p-2 bg-white rounded-xl text-center text-xs border border-sky-100 font-mono">
-                      <div>
-                        <span className="text-[9px] text-slate-500 block uppercase">Duration</span>
-                        <strong className="text-slate-900">{topic.standard_duration_hours} Hrs</strong>
-                      </div>
-                      <div>
-                        <span className="text-[9px] text-slate-500 block uppercase">Pass Score</span>
-                        <strong className="text-emerald-700 font-bold">{topic.passing_score_pct}%</strong>
-                      </div>
-                      <div>
-                        <span className="text-[9px] text-slate-500 block uppercase">Frequency</span>
-                        <strong className="text-sky-700">{topic.frequency_days} Days</strong>
-                      </div>
-                    </div>
-
-                    {topic.syllabus && topic.syllabus.length > 0 && (
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-bold text-slate-600 uppercase">Core Syllabus Modules:</span>
-                        <div className="flex flex-wrap gap-1">
-                          {topic.syllabus.map((s, idx) => (
-                            <span key={idx} className="px-2 py-0.5 bg-sky-100/70 text-sky-800 border border-sky-200/80 rounded-md text-[9px] font-medium">
-                              {s}
+                {filteredTopics.map((topic) => {
+                  const isAddedTopic = topic.is_custom || !DEFAULT_MASTER_TOPICS.some(d => d.id === topic.id);
+                  return (
+                    <div key={topic.id} className="p-4 bg-sky-50/50 border border-sky-200 hover:border-sky-400 hover:bg-sky-50/90 rounded-2xl transition space-y-3 shadow-xs">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200">
+                              {topic.category}
                             </span>
-                          ))}
+                            {isAddedTopic && (
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                Custom Added
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="text-sm font-bold text-slate-900 mt-1.5">{topic.topic_name}</h4>
+                          <p className="text-[11px] text-slate-600 mt-1 line-clamp-2">{topic.description}</p>
+                        </div>
+                        {topic.practical_drill_required && (
+                          <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-300 rounded-full text-[9px] font-bold uppercase shrink-0">
+                            Drill Req.
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 p-2 bg-white rounded-xl text-center text-xs border border-sky-100 font-mono">
+                        <div>
+                          <span className="text-[9px] text-slate-500 block uppercase">Duration</span>
+                          <strong className="text-slate-900">{topic.standard_duration_hours} Hrs</strong>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-slate-500 block uppercase">Pass Score</span>
+                          <strong className="text-emerald-700 font-bold">{topic.passing_score_pct}%</strong>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-slate-500 block uppercase">Frequency</span>
+                          <strong className="text-sky-700">{topic.frequency_days} Days</strong>
                         </div>
                       </div>
-                    )}
 
-                    <div className="flex items-center justify-between pt-2 border-t border-sky-100 text-xs">
-                      <span className="text-[10px] text-slate-500 truncate max-w-[200px]">Audience: {topic.target_audience}</span>
-                      <button
-                        onClick={() => selectTopicForSession(topic)}
-                        className="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer shrink-0"
-                      >
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Select Topic</span>
-                      </button>
+                      {topic.syllabus && topic.syllabus.length > 0 && (
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold text-slate-600 uppercase">Core Syllabus Modules:</span>
+                          <div className="flex flex-wrap gap-1">
+                            {topic.syllabus.map((s, idx) => (
+                              <span key={idx} className="px-2 py-0.5 bg-sky-100/70 text-sky-800 border border-sky-200/80 rounded-md text-[9px] font-medium">
+                                {s}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between pt-2 border-t border-sky-100 text-xs">
+                        <span className="text-[10px] text-slate-500 truncate max-w-[170px]">Audience: {topic.target_audience}</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTopic(topic.id, topic.topic_name)}
+                            title={`Remove "${topic.topic_name}" from Master Catalog`}
+                            className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Remove</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => selectTopicForSession(topic)}
+                            className="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Select Topic</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {filteredTopics.length === 0 && (
@@ -1765,14 +1949,27 @@ export default function TrainingView({
             {/* Modal Footer */}
             <div className="p-4 bg-sky-50/80 border-t border-sky-200 flex items-center justify-between text-xs shrink-0">
               <span className="text-slate-500 font-mono">
-                Total <strong>{masterTopics.length}</strong> Standardized Curriculum Modules
+                Total <strong>{masterTopics.length}</strong> Standardized Curriculum Modules {addedTopicsCount > 0 && <span className="text-amber-700 font-semibold">({addedTopicsCount} custom added)</span>}
               </span>
-              <button
-                onClick={() => setIsTrainingTopicModalOpen(false)}
-                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold cursor-pointer transition"
-              >
-                Close
-              </button>
+              <div className="flex items-center gap-2">
+                {addedTopicsCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAllAddedTopics}
+                    className="px-3 py-2 bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-xl font-bold cursor-pointer transition flex items-center gap-1.5"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Clear {addedTopicsCount} Added Topic(s)</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsTrainingTopicModalOpen(false)}
+                  className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold cursor-pointer transition"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1813,10 +2010,14 @@ export default function TrainingView({
 
               <button
                 onClick={() => setIsAddingNewTrainer(!isAddingNewTrainer)}
-                className="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer ${
+                  isAddingNewTrainer
+                    ? 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+                    : 'bg-sky-600 hover:bg-sky-700 text-white'
+                }`}
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{isAddingNewTrainer ? 'Close Form' : '+ Register Certified Trainer'}</span>
+                {isAddingNewTrainer ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                <span>{isAddingNewTrainer ? 'Close Form' : 'Register Certified Trainer'}</span>
               </button>
             </div>
 
@@ -1930,13 +2131,23 @@ export default function TrainingView({
                       <span className="text-[10px] text-slate-500 truncate max-w-[190px]">
                         Units: {trainer.assigned_units.join(', ')}
                       </span>
-                      <button
-                        onClick={() => selectTrainerForSession(trainer.name, trainer.email)}
-                        className="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer shrink-0"
-                      >
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Select Trainer</span>
-                      </button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => handleDeleteTrainer(trainer.id, trainer.name)}
+                          className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold flex items-center gap-1 transition cursor-pointer"
+                          title={`Remove ${trainer.name} from directory`}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Remove</span>
+                        </button>
+                        <button
+                          onClick={() => selectTrainerForSession(trainer.name, trainer.email)}
+                          className="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Select Trainer</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -2191,6 +2402,103 @@ export default function TrainingView({
                 <strong>Caption:</strong> {evidenceViewerFile.caption}
               </p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* TRAINING HEAD HD PHOTO VIEWER LIGHTBOX MODAL                   */}
+      {/* ------------------------------------------------------------- */}
+      {isPhotoModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn"
+          onClick={() => setIsPhotoModalOpen(false)}
+        >
+          <div 
+            className="bg-[#0f172a] border border-fuchsia-500/40 rounded-3xl p-6 max-w-2xl w-full shadow-2xl space-y-4 text-slate-100 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/30 text-fuchsia-400">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <span>Training Head</span>
+                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30">
+                      T&amp;D Executive
+                    </span>
+                  </h3>
+                  <p className="text-[10px] font-mono text-slate-400">Spoorthy Integrated Solutions · Executive HD Portrait</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsPhotoModalOpen(false)}
+                className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* High Definition Image Container */}
+            <div className="relative rounded-2xl overflow-hidden border-2 border-slate-700/80 bg-black shadow-inner flex items-center justify-center min-h-[380px] max-h-[520px]">
+              <img 
+                src="/training-head-profile.jpg" 
+                alt="Training Head - Executive Portrait" 
+                className="w-full max-h-[500px] object-contain"
+                style={{ imageRendering: '-webkit-optimize-contrast' }}
+              />
+              <div className="absolute top-2.5 left-2.5 bg-black/85 backdrop-blur-md px-2.5 py-1 rounded-lg border border-fuchsia-400/40 text-[9.5px] font-mono text-fuchsia-300 font-bold flex items-center gap-1.5 shadow-lg">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>ORIGINAL HD · 806 × 1024</span>
+              </div>
+            </div>
+
+            {/* Executive Details Card */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Designation</div>
+                <div className="font-bold text-slate-200 mt-0.5 truncate">Training Head</div>
+              </div>
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Department</div>
+                <div className="font-bold text-slate-200 mt-0.5 truncate">Training &amp; Development</div>
+              </div>
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Facility Radar</div>
+                <div className="font-bold text-emerald-400 mt-0.5 truncate">{facilityUnitsList.length} Client Sites</div>
+              </div>
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Master Topics</div>
+                <div className="font-bold text-fuchsia-400 mt-0.5 truncate">{masterTopics.length} Curricula</div>
+              </div>
+            </div>
+
+            {/* Footer with Details & Download */}
+            <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
+              <div className="text-[11px] text-slate-400 font-mono">
+                <span className="text-slate-200 font-bold">Scope:</span> Vertical Leadership &amp; Field Drills
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href="/training-head-profile.jpg"
+                  download="Spoorthy_Training_Head_Portrait_HD.jpg"
+                  className="px-3 py-1.5 bg-fuchsia-600/20 hover:bg-fuchsia-600/30 text-fuchsia-300 border border-fuchsia-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download HD</span>
+                </a>
+                <button
+                  onClick={() => setIsPhotoModalOpen(false)}
+                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -132,7 +132,7 @@ export const CRMClientMasterView: React.FC<Props> = ({
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="px-4 py-2.5 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold text-xs rounded-xl shadow-md shadow-sky-500/20 flex items-center gap-2 transition active:scale-95 cursor-pointer shrink-0"
+          className="px-4 py-2.5 bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-300 hover:to-sky-400 text-white font-bold text-xs rounded-xl shadow-md shadow-sky-400/20 flex items-center gap-2 transition active:scale-95 cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Add Client Master</span>
@@ -290,9 +290,9 @@ export const CRMClientMasterView: React.FC<Props> = ({
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white border border-sky-300 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="bg-gradient-to-r from-sky-600 to-blue-700 p-5 flex items-center justify-between text-white">
-              <h3 className="text-base font-bold">Add New Master Client</h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl transition">
+            <div className="bg-white p-5 border-b border-slate-200 flex items-center justify-between text-slate-800">
+              <h3 className="text-base font-bold text-slate-900">Add New Master Client</h3>
+              <button onClick={() => setIsAddModalOpen(false)} className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -469,9 +469,9 @@ export const CRMClientMasterView: React.FC<Props> = ({
       {editingClient && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white border border-sky-300 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="bg-gradient-to-r from-sky-600 to-blue-700 p-5 flex items-center justify-between text-white">
-              <h3 className="text-base font-bold">Edit Client: {editingClient.company_name}</h3>
-              <button onClick={() => setEditingClient(null)} className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl transition">
+            <div className="bg-white p-5 border-b border-slate-200 flex items-center justify-between text-slate-800">
+              <h3 className="text-base font-bold text-slate-900">Edit Client: {editingClient.company_name}</h3>
+              <button onClick={() => setEditingClient(null)} className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition">
                 <X className="w-5 h-5" />
               </button>
             </div>

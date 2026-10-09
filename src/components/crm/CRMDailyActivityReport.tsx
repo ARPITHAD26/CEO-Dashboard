@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CRMDailyActivityReport, AppState } from '../../types';
-import { 
-  Plus, Calendar, CheckCircle2, 
+import {
+  Plus, Calendar, CheckCircle2,
   X, ShieldCheck
 } from 'lucide-react';
 
@@ -78,24 +78,22 @@ export const CRMDailyActivityReportView: React.FC<Props> = ({
 
   return (
     <div className="space-y-6">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
             <span>Daily Activity Reports (DAR) &amp; Productivity Logs</span>
-            <span className="px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 font-mono text-[10px] font-bold border border-sky-200">
+            <span className="px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-500 font-mono text-[10px] font-bold border border-sky-200">
               {dars.length} Filed Reports
             </span>
           </h3>
-          <p className="text-xs text-slate-500 mt-0.5">
-            End-of-day accountability logs tracking calls, field visits, meetings, proposals sent, and tomorrow's commitment.
-          </p>
+
         </div>
 
         <button
           onClick={() => setIsSubmitModalOpen(true)}
-          className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-2xl shadow-sm flex items-center gap-2 transition active:scale-95 cursor-pointer shrink-0"
+          className="px-4 py-2 bg-sky-400 hover:bg-sky-500 text-white font-bold text-xs rounded-2xl shadow-sm flex items-center gap-2 transition active:scale-95 cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Submit Today's DAR</span>
@@ -128,16 +126,16 @@ export const CRMDailyActivityReportView: React.FC<Props> = ({
       <div className="space-y-4">
         {filteredDars.map(dar => (
           <div key={dar.id} className="p-5 bg-white border border-sky-200 hover:border-sky-400 rounded-3xl space-y-4 transition shadow-sm">
-            
+
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-sky-100 pb-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-sky-100 border border-sky-200 flex items-center justify-center font-bold font-mono text-sky-700 text-sm">
-                  {dar.executive_name.split(' ').map(n => n[0]).join('')}
+                <div className="w-10 h-10 rounded-xl bg-sky-100 border border-sky-200 flex items-center justify-center font-bold font-mono text-sky-500 text-sm">
+                  {(dar.executive_name || '').split(' ').map(n => n[0]).join('')}
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-slate-900">{dar.executive_name}</h4>
                   <span className="text-[10px] font-mono text-slate-500 flex items-center gap-1.5">
-                    <Calendar className="w-3 h-3 text-sky-600" />
+                    <Calendar className="w-3 h-3 text-sky-400" />
                     Report Date: <strong className="text-slate-800">{dar.report_date}</strong>
                     • Filed at {dar.submitted_at ? new Date(dar.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'EOD'}
                   </span>
@@ -145,10 +143,9 @@ export const CRMDailyActivityReportView: React.FC<Props> = ({
               </div>
 
               <div className="flex items-center gap-2">
-                <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold border ${
-                  dar.status === 'Approved' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
-                  'bg-sky-100 text-sky-800 border-sky-300'
-                }`}>
+                <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold border ${dar.status === 'Approved' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
+                  'bg-sky-100 text-sky-500 border-sky-300'
+                  }`}>
                   {dar.status}
                 </span>
 
@@ -168,17 +165,17 @@ export const CRMDailyActivityReportView: React.FC<Props> = ({
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
               <div className="p-2.5 bg-sky-50/60 rounded-2xl border border-sky-100 text-center">
                 <span className="text-[10px] font-mono text-slate-500 uppercase block">Calls Made</span>
-                <div className="text-base font-mono font-bold text-sky-700 mt-0.5">{dar.calls_made}</div>
+                <div className="text-base font-mono font-bold text-sky-500 mt-0.5">{dar.calls_made}</div>
               </div>
 
               <div className="p-2.5 bg-sky-50/60 rounded-2xl border border-sky-100 text-center">
                 <span className="text-[10px] font-mono text-slate-500 uppercase block">Field Visits</span>
-                <div className="text-base font-mono font-bold text-sky-700 mt-0.5">{dar.visits_done}</div>
+                <div className="text-base font-mono font-bold text-sky-500 mt-0.5">{dar.visits_done}</div>
               </div>
 
               <div className="p-2.5 bg-sky-50/60 rounded-2xl border border-sky-100 text-center">
                 <span className="text-[10px] font-mono text-slate-500 uppercase block">Meetings Done</span>
-                <div className="text-base font-mono font-bold text-blue-700 mt-0.5">{dar.meetings_done}</div>
+                <div className="text-base font-mono font-bold text-sky-500 mt-0.5">{dar.meetings_done}</div>
               </div>
 
               <div className="p-2.5 bg-sky-50/60 rounded-2xl border border-sky-100 text-center">
@@ -205,7 +202,7 @@ export const CRMDailyActivityReportView: React.FC<Props> = ({
               </div>
 
               <div className="p-3 bg-sky-50/60 border border-sky-200 rounded-2xl space-y-1">
-                <span className="text-[10px] font-mono uppercase text-sky-800 font-bold block">Tomorrow's Planned Targets</span>
+                <span className="text-[10px] font-mono uppercase text-sky-500 font-bold block">Tomorrow's Planned Targets</span>
                 <p className="text-slate-800">{dar.tomorrow_plan}</p>
               </div>
             </div>
@@ -231,9 +228,9 @@ export const CRMDailyActivityReportView: React.FC<Props> = ({
       {isSubmitModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
           <div className="bg-white border border-sky-300 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="bg-gradient-to-r from-sky-600 to-blue-700 p-5 border-b border-sky-400/30 flex items-center justify-between text-white">
-              <h3 className="text-base font-black">Submit Daily Activity Report (DAR)</h3>
-              <button onClick={() => setIsSubmitModalOpen(false)} className="p-1.5 bg-white/20 hover:bg-white/30 text-white rounded-xl transition cursor-pointer">
+            <div className="bg-white p-5 border-b border-slate-200 flex items-center justify-between text-slate-800">
+              <h3 className="text-base font-black text-slate-900">Submit Daily Activity Report (DAR)</h3>
+              <button onClick={() => setIsSubmitModalOpen(false)} className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -282,7 +279,16 @@ export const CRMDailyActivityReportView: React.FC<Props> = ({
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-600 block mb-1">Meetings Conducted</label>
+                  <label className="text-[10px] font-bold text-slate-600 block mb-1">Internal meeting</label>
+                  <input
+                    type="number"
+                    value={newDAR.meetings_done}
+                    onChange={e => setNewDAR({ ...newDAR, meetings_done: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-sky-50/50 border border-sky-200 rounded-xl text-slate-800 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-600 block mb-1">External meeting</label>
                   <input
                     type="number"
                     value={newDAR.meetings_done}
@@ -324,7 +330,7 @@ export const CRMDailyActivityReportView: React.FC<Props> = ({
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="text-[10px] font-bold text-sky-800 block mb-1 font-bold">Tomorrow's Planned Targets *</label>
+                  <label className="text-[10px] font-bold text-sky-500 block mb-1 font-bold">Tomorrow's Planned Targets *</label>
                   <textarea
                     rows={2}
                     required
@@ -340,7 +346,7 @@ export const CRMDailyActivityReportView: React.FC<Props> = ({
                 <button type="button" onClick={() => setIsSubmitModalOpen(false)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium cursor-pointer transition">
                   Cancel
                 </button>
-                <button type="submit" className="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl shadow-md cursor-pointer transition">
+                <button type="submit" className="px-5 py-2 bg-sky-400 hover:bg-sky-500 text-white font-bold rounded-xl shadow-md cursor-pointer transition">
                   Submit DAR
                 </button>
               </div>

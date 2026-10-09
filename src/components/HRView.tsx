@@ -11,7 +11,7 @@ import {
   Search, Filter, ChevronRight, Download, FileText, Image as ImageIcon,
   Building2, Briefcase, Calendar, ShieldCheck, DollarSign, Clock,
   Check, X, Eye, Sparkles, ExternalLink, HelpCircle, ArrowUpRight,
-  TrendingDown, TrendingUp, AlertCircle, Phone, MapPin, Star, UserCheck
+  TrendingDown, TrendingUp, AlertCircle, Phone, MapPin, Star, UserCheck, Maximize2
 } from 'lucide-react';
 
 interface HRViewProps {
@@ -94,6 +94,7 @@ export default function HRView({
     isOpen: false,
     title: ''
   });
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
   // Forms
   const [empForm, setEmpForm] = useState<Partial<Employee>>({
@@ -343,20 +344,66 @@ export default function HRView({
       {/* ------------------------------------------------------------- */}
       <div className="bg-gradient-to-r from-sky-700 via-sky-800 to-blue-900 text-white rounded-3xl p-6 shadow-xl border border-sky-500/30 relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="px-3 py-1 bg-white/20 text-white border border-white/30 rounded-full text-xs font-semibold tracking-wider uppercase flex items-center gap-1.5">
-                <Briefcase className="w-3.5 h-3.5 text-sky-200" />
-                CEO Dashboard – HR Functional Inputs (Draft V1)
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            {/* HR Head HD Photo Frame with Zoom & Crisp Resolution */}
+            <div 
+              className="relative group cursor-pointer shrink-0" 
+              onClick={() => setIsPhotoModalOpen(true)} 
+              title="Click to view full HD portrait of HR Head"
+            >
+              {/* Outer decorative glowing ring */}
+              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-amber-400 via-orange-400 to-yellow-300 opacity-75 group-hover:opacity-100 blur-sm transition duration-300" />
+              
+              <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-white/90 shadow-xl bg-slate-900">
+                <img 
+                  src="/hr-head-profile.jpg" 
+                  alt="HR Head" 
+                  className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                  style={{ imageRendering: '-webkit-optimize-contrast' }}
+                  loading="eager"
+                />
+                
+                {/* Hover overlay with zoom icon */}
+                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 backdrop-blur-[2px]">
+                  <Maximize2 className="w-5 h-5 text-white drop-shadow" />
+                  <span className="text-[9px] font-mono font-bold text-white uppercase tracking-wider">View HD</span>
+                </div>
+
+                {/* HD Badge indicator */}
+                <div className="absolute bottom-1 right-1 bg-black/85 backdrop-blur-md px-1.5 py-0.5 rounded text-[8px] font-mono font-extrabold text-amber-300 border border-amber-400/40 flex items-center gap-0.5 shadow-sm">
+                  <Sparkles className="w-2.5 h-2.5 text-amber-400 animate-pulse" />
+                  <span>HD</span>
+                </div>
+              </div>
+
+              {/* Online pulse indicator */}
+              <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white"></span>
               </span>
-              <span className="text-xs text-sky-100 font-mono">Real-time Functional Hierarchy &amp; Exception Cockpit</span>
             </div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-              HR &amp; Workforce Operations Control Tower
-            </h1>
-            <p className="text-sky-100 text-sm mt-1 max-w-3xl">
-              Centralized functional data governance across Workforce Strength, Recruitment Pipelines, Attendance, Billing Support Lifecycles, Client Complaints, Field Site Visits, Uniform/ID Checks, and PF/ESI Compliance.
-            </p>
+
+            <div>
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span className="px-2.5 py-0.5 bg-white/20 text-white border border-white/30 rounded-full text-xs font-semibold tracking-wider uppercase flex items-center gap-1.5">
+                  <Briefcase className="w-3.5 h-3.5 text-sky-200" />
+                  CEO Dashboard – HR Functional Inputs (Draft V1)
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Live Operational Oversight
+                </span>
+              </div>
+              <h1 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5 flex-wrap">
+                <span>HR Head</span>
+                <span className="text-xs sm:text-sm font-semibold text-sky-100 font-sans tracking-normal bg-white/10 px-2.5 py-1 rounded-lg border border-white/20">
+                  Workforce Operations Control Tower
+                </span>
+              </h1>
+              <p className="text-sky-100 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
+                Centralized functional data governance across Workforce Strength, Recruitment Pipelines, Attendance, Billing Support Lifecycles, Client Complaints, Field Site Visits, Uniform/ID Checks, and PF/ESI Compliance.
+              </p>
+            </div>
           </div>
 
           {/* Quick Action Buttons */}
@@ -672,7 +719,7 @@ export default function HRView({
           </div>
 
           {/* ------------------------------------------------------------- */}
-          {/* EXCEPTIONS / ATTENTION REQUIRED RADAR PANEL                   */}
+          {/* EXCEPTIONS / ATTENTION REQUIRED PANEL                         */}
           {/* ------------------------------------------------------------- */}
           <div className="p-6 bg-gradient-to-r from-rose-50 via-amber-50 to-orange-50 border border-rose-200 rounded-3xl shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -688,7 +735,7 @@ export default function HRView({
             </div>
             
             <p className="text-xs text-slate-600">
-              Direct escalation radar surfacing items breaching SLA thresholds defined by HR Operations. Click any item to inspect the root cause.
+              Direct escalation surfacing items breaching SLA thresholds defined by HR Operations. Click any item to inspect the root cause.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 pt-2">
@@ -1995,6 +2042,97 @@ export default function HRView({
                 <strong>Details:</strong> {isEvidenceModalOpen.description}
               </p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================= */}
+      {/* EXECUTIVE HD PORTRAIT MODAL                                   */}
+      {/* ============================================================= */}
+      {isPhotoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-700/80 rounded-3xl p-6 max-w-xl w-full shadow-2xl space-y-4 text-white relative">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/20 rounded-xl border border-amber-500/30">
+                  <Users className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <span>HR Head</span>
+                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      Human Resources Vertical
+                    </span>
+                  </h3>
+                  <p className="text-[10px] font-mono text-slate-400">Spoorthy Integrated Solutions • Executive HD Portrait</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsPhotoModalOpen(false)}
+                className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* High Definition Image Container */}
+            <div className="relative rounded-2xl overflow-hidden border-2 border-slate-700/80 bg-black shadow-inner flex items-center justify-center min-h-[380px] max-h-[520px]">
+              <img 
+                src="/hr-head-profile.jpg" 
+                alt="HR Head - Executive Portrait" 
+                className="w-full max-h-[500px] object-contain"
+                style={{ imageRendering: '-webkit-optimize-contrast' }}
+              />
+              <div className="absolute top-2.5 left-2.5 bg-black/85 backdrop-blur-md px-2.5 py-1 rounded-lg border border-amber-400/40 text-[9.5px] font-mono text-amber-300 font-bold flex items-center gap-1.5 shadow-lg">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>ORIGINAL HD • 1024 × 682</span>
+              </div>
+            </div>
+
+            {/* Executive Details Card */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Designation</div>
+                <div className="font-bold text-slate-200 mt-0.5 truncate">HR Head</div>
+              </div>
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Department</div>
+                <div className="font-bold text-slate-200 mt-0.5 truncate">Human Resources</div>
+              </div>
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Workforce</div>
+                <div className="font-bold text-amber-400 mt-0.5 truncate">{totalEmployeesCount.toLocaleString()} Active</div>
+              </div>
+              <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-mono">Compliance</div>
+                <div className="font-bold text-emerald-400 mt-0.5 truncate">{uniformComplianceAvg}% OK</div>
+              </div>
+            </div>
+
+            {/* Footer with Details & Download */}
+            <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
+              <div className="text-[11px] text-slate-400 font-mono">
+                <span className="text-slate-200 font-bold">Scope:</span> Workforce, Attendance, Statutory & Field Audits
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href="/hr-head-profile.jpg"
+                  download="Spoorthy_HR_Head_Portrait_HD.jpg"
+                  className="px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download HD</span>
+                </a>
+                <button
+                  onClick={() => setIsPhotoModalOpen(false)}
+                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -18,6 +18,37 @@ export interface VerticalMetadata {
 }
 
 export const VERTICAL_CONFIGS: Record<Role, VerticalMetadata> = {
+  'Government Tenders': {
+    role: 'Government Tenders',
+    verticalName: 'Government Tender Module',
+    color: 'indigo',
+    accentBg: 'bg-indigo-500/10',
+    borderColor: 'border-indigo-500/30',
+    badgeClass: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
+    views: [
+      { id: 'master', name: 'Tender Master Screen', description: 'Central, State, PSU and Municipal tender registry' },
+      { id: 'lifecycle', name: '28-Stage Lifecycle', description: 'Visual pipeline and stage advancement stepper' },
+      { id: 'eligibility', name: 'Eligibility Checker', description: 'Pre-qualification checklist scoring readiness %' },
+      { id: 'documents', name: 'Document Checklist', description: 'Mandatory annexures, technical and financial BOQ' },
+      { id: 'portal', name: 'Portal Tracking & DSC', description: 'GeM/CPPP portal logins, Class-3 DSC and upload receipts' },
+      { id: 'corrigendums', name: 'Corrigendum Register', description: 'Addendums and management review clearance flags' },
+      { id: 'evaluation', name: 'Evaluation Tracker', description: 'Technical results, financial opening and L1 rankings' },
+      { id: 'statutory', name: 'Statutory Cost Check', description: 'Minimum wage, PF, ESI, and bonus validation panel' }
+    ]
+  },
+  'Private Tenders': {
+    role: 'Private Tenders',
+    verticalName: 'Private Tender Management',
+    color: 'emerald',
+    accentBg: 'bg-emerald-500/10',
+    borderColor: 'border-emerald-500/30',
+    badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+    views: [
+      { id: 'pipeline', name: 'Private Tender Pipeline', description: 'Enquiries, proposals, negotiations and client outcomes' },
+      { id: 'master', name: 'Private Tender Master', description: 'Client, commercial, ownership and lifecycle details' },
+      { id: 'credit', name: 'Credit Risk Review', description: 'Finance clearance and client payment history' }
+    ]
+  },
   'Finance Head': {
     role: 'Finance Head',
     verticalName: 'Finance & Accounts',
@@ -109,7 +140,7 @@ export const VERTICAL_CONFIGS: Record<Role, VerticalMetadata> = {
       { id: 'applications', name: 'Application Health & Uptime', description: 'Web apps, biometric endpoints, and response latencies' },
       { id: 'servers', name: 'VPS Nodes & Database Clusters', description: 'Hostinger VPS nodes, CPU, RAM, and NVMe telemetry' },
       { id: 'tickets', name: 'IT Support & Helpdesk Tickets', description: 'Hardware repair, VPN access, and account requests' },
-      { id: 'security', name: 'Security Checks & SSL Radar', description: 'SSL expiration, MongoDB backups, and firewall status' }
+      { id: 'security', name: 'Security Checks & SSL', description: 'SSL expiration, MongoDB backups, and firewall status' }
     ]
   },
   'CEO': {
@@ -120,7 +151,7 @@ export const VERTICAL_CONFIGS: Record<Role, VerticalMetadata> = {
     borderColor: 'border-rose-500/30',
     badgeClass: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
     views: [
-      { id: 'overview', name: 'Master Enterprise Metrics', description: 'Full revenue, headcount, SLA health, and pipeline radar' }
+      { id: 'overview', name: 'Master Enterprise Metrics', description: 'Full revenue, headcount, SLA health, and pipeline metrics' }
     ]
   },
   'Admin': {

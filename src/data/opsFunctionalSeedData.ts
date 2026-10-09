@@ -1041,7 +1041,7 @@ export const INITIAL_OPS_EQUIPMENT_RECORDS: OpsEquipmentRecord[] = [
 ];
 
 // ============================================================================
-// 9. DYNAMIC "OPERATIONS — ATTENTION REQUIRED" RADAR SEED DATA
+// 9. DYNAMIC "OPERATIONS — ATTENTION REQUIRED" SEED DATA
 // ============================================================================
 export const INITIAL_OPS_ATTENTION_ITEMS: OpsAttentionItem[] = [
   {

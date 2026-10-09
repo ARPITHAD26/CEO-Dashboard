@@ -1,6 +1,41 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+/* ── Accent Colour System ──────────────────────────────────────────────────── */
+/* Default accent is Cyber Cyan; overridden at runtime via JS setProperty */
+:root {
+  --accent: #06b6d4;
+  --accent-glow: rgba(6, 182, 212, 0.3);
+}
+
+/* Palette-aware glow utility: used on brand icon */
+.accent-icon {
+  color: var(--accent) !important;
+  filter: drop-shadow(0 0 6px var(--accent-glow));
+}
+
+/* Palette-aware ring on active palette swatch */
+.palette-swatch-active {
+  box-shadow: 0 0 0 2px var(--accent), 0 0 12px var(--accent-glow);
+}
+
+/* Additional accent utilities for dynamic palette colouring */
+.accent-text {
+  color: var(--accent) !important;
+}
+.accent-bg {
+  background-color: var(--accent) !important;
+}
+.accent-border {
+  border-color: var(--accent) !important;
+}
+.accent-glow-sm {
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+.accent-glow-lg {
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", sans-serif;
@@ -33,6 +68,10 @@
   backdrop-filter: blur(12px) !important;
 }
 .light .bg-\[\#161B2A\]\/40 {
+  background-color: #ffffff !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05) !important;
+}
+.light .bg-\[\#161B2A\]\/50 {
   background-color: #ffffff !important;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05) !important;
 }
@@ -99,7 +138,10 @@
   color: #64748b !important;
 }
 .light .text-white {
-  color: #0f172a !important;
+  color: #ffffff !important;
+}
+.light .text-black {
+  color: #ffffff !important;
 }
 
 /* Custom linear gradient decorative grid for Light Theme */
@@ -117,78 +159,32 @@
   background-color: #e2e8f0 !important;
   color: #0f172a !important;
 }
-.light .hover\:border-cyan-500\/30:hover {
-  border-color: rgba(6, 182, 212, 0.4) !important;
-}
-.light .hover\:border-cyan-500\/40:hover {
-  border-color: rgba(6, 182, 212, 0.5) !important;
-}
-.light .hover\:border-emerald-500\/40:hover {
-  border-color: rgba(16, 185, 129, 0.5) !important;
-}
-.light .hover\:border-emerald-500\/30:hover {
-  border-color: rgba(16, 185, 129, 0.4) !important;
-}
-.light .hover\:border-indigo-500\/40:hover {
-  border-color: rgba(99, 102, 241, 0.5) !important;
-}
-.light .hover\:border-amber-500\/40:hover {
-  border-color: rgba(245, 158, 11, 0.5) !important;
-}
-.light .hover\:border-amber-500\/30:hover {
-  border-color: rgba(245, 158, 11, 0.4) !important;
-}
-.light .hover\:border-pink-500\/40:hover {
-  border-color: rgba(236, 72, 153, 0.5) !important;
-}
-.light .hover\:border-fuchsia-500\/30:hover {
-  border-color: rgba(217, 70, 239, 0.4) !important;
-}
-.light .hover\:border-red-500\/30:hover {
-  border-color: rgba(239, 68, 68, 0.4) !important;
-}
-.light .hover\:border-violet-500\/30:hover {
-  border-color: rgba(139, 92, 246, 0.4) !important;
-}
+.light .hover\:border-cyan-500\/30:hover,
+.light .hover\:border-cyan-500\/40:hover,
+.light .hover\:border-emerald-500\/40:hover,
+.light .hover\:border-emerald-500\/30:hover,
+.light .hover\:border-indigo-500\/40:hover,
+.light .hover\:border-amber-500\/40:hover,
+.light .hover\:border-amber-500\/30:hover,
+.light .hover\:border-pink-500\/40:hover,
+.light .hover\:border-fuchsia-500\/30:hover,
+.light .hover\:border-red-500\/30:hover,
+.light .hover\:border-violet-500\/30:hover,
 .light .hover\:border-orange-500\/30:hover {
-  border-color: rgba(249, 115, 22, 0.4) !important;
+  border-color: rgba(var(--accent-rgb, 6, 182, 212), 0.5) !important;
 }
 
-/* Active side nav highlight classes */
-.light .active-nav-ceo {
-  background-color: rgba(6, 182, 212, 0.08) !important;
-  border-color: rgba(6, 182, 212, 0.3) !important;
-  color: #0891b2 !important;
-}
-.light .active-nav-gm {
-  background-color: rgba(16, 185, 129, 0.08) !important;
-  border-color: rgba(16, 185, 129, 0.3) !important;
-  color: #059669 !important;
-}
-.light .active-nav-training {
-  background-color: rgba(217, 70, 239, 0.08) !important;
-  border-color: rgba(217, 70, 239, 0.3) !important;
-  color: #c026d3 !important;
-}
-.light .active-nav-it {
-  background-color: rgba(139, 92, 246, 0.08) !important;
-  border-color: rgba(139, 92, 246, 0.3) !important;
-  color: #7c3aed !important;
-}
-.light .active-nav-hr {
-  background-color: rgba(245, 158, 11, 0.08) !important;
-  border-color: rgba(245, 158, 11, 0.3) !important;
-  color: #d97706 !important;
-}
-.light .active-nav-bd {
-  background-color: rgba(14, 165, 233, 0.12) !important;
-  border-color: rgba(14, 165, 233, 0.4) !important;
-  color: #0284c7 !important;
-}
+/* Active side nav highlight classes - adapt dynamically to selected theme color */
+.light .active-nav-ceo,
+.light .active-nav-gm,
+.light .active-nav-training,
+.light .active-nav-it,
+.light .active-nav-hr,
+.light .active-nav-bd,
 .light .active-nav-operator {
-  background-color: rgba(244, 63, 94, 0.08) !important;
-  border-color: rgba(244, 63, 94, 0.3) !important;
-  color: #e11d48 !important;
+  background-color: rgba(var(--accent-rgb, 6, 182, 212), 0.10) !important;
+  border-color: rgba(var(--accent-rgb, 6, 182, 212), 0.35) !important;
+  color: var(--accent-primary, #0891b2) !important;
 }
 
 /* Form Fields and Interactive Dropdowns */
@@ -227,4 +223,38 @@
 .light .recharts-text {
   fill: #475569 !important;
 }
+
+/* ── Custom Scrollbar for Palette Dropdown ─────────────────────────────────── */
+#color-palette-dropdown::-webkit-scrollbar {
+  width: 4px;
+}
+#color-palette-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+#color-palette-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 4px;
+}
+#color-palette-dropdown::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.5);
+}
+
+/* Light mode palette dropdown overrides */
+.light #color-palette-dropdown {
+  background-color: rgba(255, 255, 255, 0.97) !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+}
+.light #color-palette-dropdown p {
+  color: #64748b !important;
+}
+.light #color-palette-dropdown button {
+  color: #475569 !important;
+}
+.light #color-palette-dropdown button:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  color: #0f172a !important;
+}
+
+
 

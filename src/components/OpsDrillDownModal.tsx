@@ -113,7 +113,7 @@ export const OpsDrillDownModal: React.FC<OpsDrillDownModalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Comprehensive operational drill-downs, root cause causality chain, audit proofs &amp; attention radar
+                Comprehensive operational drill-downs, root cause causality chain, audit proofs &amp; attention items
               </p>
             </div>
           </div>
@@ -191,7 +191,7 @@ export const OpsDrillDownModal: React.FC<OpsDrillDownModalProps> = ({
                   <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
                   <div>
                     <h4 className="text-xs font-bold uppercase tracking-wider">
-                      Operations — Attention Required (Executive Dynamic Radar)
+                      Operations — Attention Required (Executive Dynamic)
                     </h4>
                     <p className="text-[11px] text-rose-700/80 dark:text-rose-400">
                       Surfaces critical site shortages, severe OT spikes, overdue client complaints, and broken equipment needing immediate CEO intervention.
