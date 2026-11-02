@@ -9,7 +9,7 @@ import { createWorker } from "tesseract.js";
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // Body parsers with support for large file / document uploads
 app.use(express.json({ limit: "50mb" }));
