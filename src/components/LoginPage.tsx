@@ -63,10 +63,6 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
         <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: '500px', height: '500px', background: 'radial-gradient(circle,rgba(99,102,241,0.12) 0%,transparent 70%)', borderRadius: '50%' }} />
         <div style={{ position: 'absolute', bottom: '-10%', left: '-5%', width: '600px', height: '600px', background: 'radial-gradient(circle,rgba(168,85,247,0.08) 0%,transparent 70%)', borderRadius: '50%' }} />
         <div style={{ position: 'absolute', top: '40%', left: '40%', width: '400px', height: '400px', background: 'radial-gradient(circle,rgba(34,197,94,0.06) 0%,transparent 70%)', borderRadius: '50%' }} />
-        <svg width="100%" height="100%" style={{ opacity: 0.35 }}>
-          <defs><pattern id="lgrid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#6366f1" strokeWidth="0.3" /></pattern></defs>
-          <rect width="100%" height="100%" fill="url(#lgrid)" />
-        </svg>
       </div>
 
       <header style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(99,102,241,0.12)', boxShadow: '0 1px 20px rgba(99,102,241,0.08)', padding: '14px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
