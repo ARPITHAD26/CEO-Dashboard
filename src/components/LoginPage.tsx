@@ -88,8 +88,8 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
         </div>
       </header>
 
-      <main style={{ position: 'relative', zIndex: 10, flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '36px 24px', maxWidth: '1400px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(340px,400px) 1fr', gap: '28px', width: '100%', alignItems: 'start' }}>
+      <main style={{ position: 'relative', zIndex: 10, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '36px 24px', width: '100%', boxSizing: 'border-box' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px,460px)', gap: '28px', width: '100%', maxWidth: '460px', alignItems: 'center' }}>
 
           <div>
             {/* ── Standard Username / Password Card ────────────── */}
@@ -105,7 +105,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                     <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', color: '#6366f1', textTransform: 'uppercase' as const, fontFamily: 'monospace' }}>Secure Session Portal</span>
                   </div>
                   <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#1e1b4b', letterSpacing: '-0.03em', margin: 0 }}>Sign In to Dashboard</h2>
-                  <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', lineHeight: 1.6, marginBottom: 0 }}>Authenticate using standard role credentials. Access privileges are strictly isolated per role.</p>
+                  <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', lineHeight: 1.6, marginBottom: 0 }}>Sign in with your department account. You will be directed to the dashboard authorized for your role.</p>
                 </div>
 
                 {errorMsg && (
@@ -117,12 +117,12 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
                 <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#374151', marginBottom: '6px', fontFamily: 'monospace' }}>Standard Username or Email</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: '#374151', marginBottom: '6px', fontFamily: 'monospace' }}>Department Username or Email</label>
                     <div style={{ position: 'relative' }}>
                       <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', pointerEvents: 'none' }}>
                         <User style={{ width: '14px', height: '14px' }} />
                       </div>
-                      <input id="login-username" type="text" value={identifier} onChange={e => setIdentifier(e.target.value)} placeholder="e.g. admin, ceo, finance, hr" autoComplete="username"
+                      <input id="login-username" type="text" value={identifier} onChange={e => setIdentifier(e.target.value)} placeholder="Enter your username or email" autoComplete="username"
                         style={{ width: '100%', boxSizing: 'border-box' as const, background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: '12px', paddingLeft: '38px', paddingRight: '14px', paddingTop: '10px', paddingBottom: '10px', fontSize: '13px', color: '#111827', fontFamily: 'monospace', outline: 'none' }}
                         onFocus={e => { e.target.style.borderColor = '#6366f1'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.12)'; e.target.style.background = '#ffffff'; }}
                         onBlur={e => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; e.target.style.background = '#f9fafb'; }}
@@ -148,36 +148,21 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                     </div>
                   </div>
 
-                  {selectedPreset && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontFamily: 'monospace', color: '#6366f1' }}>
-                      <CheckCircle2 style={{ width: '13px', height: '13px' }} />
-                      <span>Selected preset: <strong>{selectedPreset}</strong></span>
-                    </div>
-                  )}
-
                   <button type="submit" id="login-submit-btn" disabled={isLoading}
                     style={{ marginTop: '4px', padding: '12px', borderRadius: '12px', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', border: 'none', cursor: isLoading ? 'not-allowed' : 'pointer', color: 'white', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 20px rgba(99,102,241,0.35)', transition: 'all 0.2s', opacity: isLoading ? 0.7 : 1 }}>
                     {isLoading ? (
                       <><span style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', display: 'inline-block', animation: 'lspin 0.8s linear infinite' }} />Authenticating Credentials...</>
                     ) : (
-                      <>Enter Executive Cockpit<ArrowRight style={{ width: '14px', height: '14px' }} /></>
+                      <>Sign In<ArrowRight style={{ width: '14px', height: '14px' }} /></>
                     )}
                   </button>
                 </form>
 
-                <div style={{ marginTop: '22px', paddingTop: '18px', borderTop: '1px solid #f3f4f6' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                    <ShieldCheck style={{ width: '13px', height: '13px', color: '#6366f1' }} />
-                    <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#374151', fontFamily: 'monospace' }}>Access Matrix Notice</span>
-                  </div>
-                  <p style={{ fontSize: '11px', color: '#4b5563', lineHeight: 1.6, margin: '0 0 6px' }}><strong>Admin &amp; CEO:</strong> Full unrestricted privileges to view all 9 operational pages and sub-modules.</p>
-                  <p style={{ fontSize: '11px', color: '#6b7280', lineHeight: 1.6, margin: 0 }}><strong>Department Heads:</strong> Restricted to their designated operational dashboard only.</p>
-                </div>
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+          <div style={{ display: 'none', flexDirection: 'column', gap: '22px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '10px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
