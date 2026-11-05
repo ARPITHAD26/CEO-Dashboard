@@ -143,9 +143,22 @@ export default function App() {
       try {
         setCloudSyncing(true);
         const firestoreState = await fetchAppStateFromFirestore();
-        if (isMounted && firestoreState && (firestoreState.sites?.length > 0 || firestoreState.clients?.length > 0)) {
-          setState(firestoreState);
-          saveState(firestoreState);
+        if (isMounted && firestoreState && (
+          firestoreState.sites?.length > 0 ||
+          firestoreState.clients?.length > 0 ||
+          firestoreState.stockItems?.length > 0
+        )) {
+          const stateWithInventory = {
+            ...firestoreState,
+            stockItems: firestoreState.stockItems?.length ? firestoreState.stockItems : state.stockItems,
+            stockTransactions: firestoreState.stockTransactions?.length ? firestoreState.stockTransactions : state.stockTransactions,
+            grnRecords: firestoreState.grnRecords?.length ? firestoreState.grnRecords : state.grnRecords,
+            stockIssues: firestoreState.stockIssues?.length ? firestoreState.stockIssues : state.stockIssues,
+            uniformAllocations: firestoreState.uniformAllocations?.length ? firestoreState.uniformAllocations : state.uniformAllocations,
+            machineryAssets: firestoreState.machineryAssets?.length ? firestoreState.machineryAssets : state.machineryAssets
+          };
+          setState(stateWithInventory);
+          saveState(stateWithInventory);
         }
       } catch (err) {
         console.warn('Initial cloud sync fallback to local storage:', err);

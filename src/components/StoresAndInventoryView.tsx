@@ -3,12 +3,11 @@ import {
   StockItem, GrnRecord, StockIssueRecord, UniformAllocation, MachineryAsset, 
   AppState, Role 
 } from '../types';
-import { 
-  Package, Boxes, Plus, Search, AlertCircle, AlertOctagon, CheckCircle2, 
-  Truck, ArrowDownRight, ArrowUpRight, Shirt, Wrench, Shield, RefreshCw, 
+import {
+  Package, Boxes, Plus, Search, AlertCircle, AlertOctagon, CheckCircle2,
+  Truck, ArrowDownRight, ArrowUpRight, Shirt, Wrench, Shield, RefreshCw,
   FileText, Check, X, Filter, BarChart3, Download, Layers
 } from 'lucide-react';
-import { saveEntityToFirestore } from '../lib/firebaseService';
 
 interface StoresAndInventoryViewProps {
   state: AppState;
@@ -33,6 +32,15 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
   const [showCreateGrnModal, setShowCreateGrnModal] = useState(false);
   const [showIssueStockModal, setShowIssueStockModal] = useState(false);
   const [showUniformIssueModal, setShowUniformIssueModal] = useState(false);
+  const [issueError, setIssueError] = useState('');
+  const [issueForm, setIssueForm] = useState({
+    itemId: '',
+    siteId: '',
+    employeeName: '',
+    department: '',
+    quantity: 1,
+    receiverSignature: ''
+  });
 
   // New Stock Item State
   const [newItem, setNewItem] = useState<Partial<StockItem>>({
@@ -44,25 +52,29 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
     opening_stock: 0,
     closing_stock: 0,
     min_threshold: 10,
-    location_bin: 'Rack A-1'
+    location: 'Rack A-1'
   });
+
+  const stockItems = Array.isArray(state.stockItems)
+    ? state.stockItems.filter(item => item && typeof item === 'object')
+    : [];
 
   // Filtered Stock Items
   const filteredStock = useMemo(() => {
-    return (state.stockItems || []).filter(item => {
-      const matchesSearch = 
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.item_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchTerm.toLowerCase());
+    return stockItems.filter(item => {
+      const searchableText = [item.name, item.item_code, item.category]
+        .map(value => String(value || '').toLowerCase())
+        .join(' ');
+      const matchesSearch = searchableText.includes(searchTerm.toLowerCase());
       const matchesCategory = categoryFilter === 'ALL' || item.category === categoryFilter;
       const matchesStatus = 
         statusFilter === 'ALL' ||
-        (statusFilter === 'ZERO' && item.closing_stock === 0) ||
-        (statusFilter === 'LOW' && item.closing_stock > 0 && item.closing_stock <= item.min_threshold) ||
-        (statusFilter === 'OK' && item.closing_stock > item.min_threshold);
+        (statusFilter === 'ZERO' && Number(item.closing_stock) === 0) ||
+        (statusFilter === 'LOW' && Number(item.closing_stock) > 0 && Number(item.closing_stock) <= Number(item.min_threshold)) ||
+        (statusFilter === 'OK' && Number(item.closing_stock) > Number(item.min_threshold));
       return matchesSearch && matchesCategory && matchesStatus;
     });
-  }, [state.stockItems, searchTerm, categoryFilter, statusFilter]);
+  }, [stockItems, searchTerm, categoryFilter, statusFilter]);
 
   // Handle Save Stock Item
   const handleSaveStockItem = () => {
@@ -85,7 +97,7 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
       closing_stock: Number(newItem.opening_stock) || 0,
       min_threshold: Number(newItem.min_threshold) || 10,
       total_value: (Number(newItem.opening_stock) || 0) * (Number(newItem.unit_rate) || 0),
-      location: (newItem as any).location_bin || newItem.location || 'Warehouse General',
+      location: newItem.location || 'Warehouse General',
       status: (Number(newItem.opening_stock) || 0) > 0 ? 'In Stock' : 'Zero Stock',
       unit_cost: Number(newItem.unit_rate) || 0
     };
@@ -95,52 +107,107 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
       stockItems: [created, ...(prev.stockItems || [])]
     }));
 
-    saveEntityToFirestore('stockItems', created.id, created);
     setShowAddStockModal(false);
+  };
+
+  const handleIssueStock = () => {
+    const item = stockItems.find(stockItem => stockItem.id === issueForm.itemId);
+    const quantity = Number(issueForm.quantity);
+    if (!item || !issueForm.siteId || !issueForm.employeeName.trim() || !issueForm.receiverSignature.trim() ||
+      !Number.isFinite(quantity) || quantity <= 0 || quantity > Number(item.closing_stock)) {
+      setIssueError('Select an item and site, enter recipient details, and use a quantity available in stock.');
+      return;
+    }
+
+    const site = (state.sites || []).find(candidate => candidate.id === issueForm.siteId);
+    const nextClosing = Number(item.closing_stock) - quantity;
+    const unitRate = Number(item.unit_rate ?? item.unit_cost) || 0;
+    const issue: StockIssueRecord = {
+      id: `ISS-${Date.now()}`,
+      issue_number: `ISS/${new Date().getFullYear()}/${Date.now().toString().slice(-5)}`,
+      date: new Date().toISOString().slice(0, 10),
+      employee_id: '',
+      employee_name: issueForm.employeeName.trim(),
+      department: issueForm.department.trim() || 'Operations',
+      site_id: issueForm.siteId,
+      site_name: site?.name || 'Selected site',
+      item_id: item.id,
+      item_name: item.name,
+      quantity,
+      authorised_by: userEmail || currentRole,
+      receiver_signature: issueForm.receiverSignature.trim(),
+      status: 'Issued'
+    };
+
+    onUpdateState(prev => ({
+      ...prev,
+      stockItems: (prev.stockItems || []).map(stockItem => stockItem.id === item.id
+        ? {
+            ...stockItem,
+            closing_stock: nextClosing,
+            issues: (Number(stockItem.issues) || 0) + quantity,
+            total_value: nextClosing * unitRate,
+            status: nextClosing === 0 ? 'Zero Stock' : nextClosing <= Number(stockItem.min_threshold) ? 'Low Stock' : 'In Stock'
+          }
+        : stockItem),
+      stockIssues: [issue, ...(prev.stockIssues || [])]
+    }));
+
+    setIssueForm({ itemId: '', siteId: '', employeeName: '', department: '', quantity: 1, receiverSignature: '' });
+    setIssueError('');
+    setShowIssueStockModal(false);
   };
 
   // Summary Metrics
   const totalValuation = useMemo(() => {
-    return (state.stockItems || []).reduce((sum, item) => sum + (item.total_value || 0), 0);
-  }, [state.stockItems]);
+    return stockItems.reduce((sum, item) => {
+      const unitRate = Number(item.unit_rate ?? item.unit_cost) || 0;
+      const quantity = Number(item.closing_stock) || 0;
+      return sum + (Number(item.total_value) || quantity * unitRate);
+    }, 0);
+  }, [stockItems]);
 
   const zeroStockItems = useMemo(() => {
-    return (state.stockItems || []).filter(item => item.closing_stock === 0);
-  }, [state.stockItems]);
+    return stockItems.filter(item => Number(item.closing_stock) === 0);
+  }, [stockItems]);
 
   const lowStockItems = useMemo(() => {
-    return (state.stockItems || []).filter(item => item.closing_stock > 0 && item.closing_stock <= item.min_threshold);
-  }, [state.stockItems]);
+    return stockItems.filter(item => Number(item.closing_stock) > 0 && Number(item.closing_stock) <= Number(item.min_threshold));
+  }, [stockItems]);
 
   return (
-    <div id="stores-inventory-root" className="space-y-6">
+    <div id="stores-inventory-root" className="space-y-6 text-slate-800">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-teal-800 via-cyan-900 to-slate-850 text-white p-6 rounded-2xl shadow-lg border border-teal-600/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-teal-950 to-cyan-900 text-white p-6 md:p-8 rounded-3xl shadow-xl border border-teal-800/60 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="absolute -right-10 -top-20 w-72 h-72 rounded-full bg-cyan-400/10 blur-3xl pointer-events-none" />
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-              <Boxes className="w-3 h-3" /> Central Stores & Inventory
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wide bg-emerald-400/10 text-emerald-200 border border-emerald-300/20 flex items-center gap-1.5">
+              <Boxes className="w-3.5 h-3.5" /> CENTRAL STORES
             </span>
-            <span className="text-xs text-teal-200/80">Total Items: {(state.stockItems || []).length}</span>
+            <span className="text-xs text-cyan-100/70">{stockItems.length} inventory items</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Stores & Material Management</h1>
-          <p className="text-teal-100/80 text-sm mt-1 max-w-2xl">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Stores & Material Ledger</h1>
+          <p className="text-cyan-100/75 text-sm mt-2 max-w-2xl leading-relaxed">
             Real-time stock ledger, Goods Receipt Notes (GRN) verification, site material issues, uniform replacement cycles, and machinery asset tracking.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="relative flex flex-wrap items-center gap-2.5">
           <button
             id="btn-add-stock-item"
             onClick={() => setShowAddStockModal(true)}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-xl shadow transition flex items-center gap-2"
+            className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 text-sm font-bold rounded-xl shadow-lg shadow-emerald-950/20 transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-emerald-200"
           >
             <Plus className="w-4 h-4" /> Add New Item
           </button>
           <button
             id="btn-issue-stock"
-            onClick={() => setShowIssueStockModal(true)}
-            className="px-3.5 py-2 bg-teal-800/80 hover:bg-teal-700 text-teal-100 text-sm font-medium rounded-xl border border-teal-600/40 transition flex items-center gap-2"
+            onClick={() => {
+              setIssueError('');
+              setShowIssueStockModal(true);
+            }}
+            className="px-3.5 py-2.5 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold rounded-xl border border-white/15 transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-cyan-200"
           >
             <ArrowUpRight className="w-4 h-4 text-cyan-300" /> Issue to Site
           </button>
@@ -149,12 +216,12 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
 
       {/* KPI Cards Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium block">Total Stock Valuation</span>
-          <span className="text-2xl font-bold text-slate-900 mt-1 block">
+        <div className="bg-white p-4 md:p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+          <span className="text-xs text-slate-500 font-semibold block">TOTAL STOCK VALUATION</span>
+          <span className="text-2xl font-bold text-slate-900 mt-2 block">
             ₹{(totalValuation / 100000).toFixed(2)} Lakh
           </span>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">Across all categories</span>
+          <span className="text-[11px] text-slate-400 mt-1 block">Across all categories</span>
         </div>
 
         <div className={`p-4 rounded-2xl border shadow-sm ${
@@ -164,33 +231,33 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
             <span className="text-xs font-medium">Zero Stock Alert</span>
             {zeroStockItems.length > 0 && <AlertOctagon className="w-4 h-4 text-rose-600 animate-pulse" />}
           </div>
-          <span className="text-2xl font-bold mt-1 block text-rose-600">
+          <span className="text-2xl font-bold mt-2 block text-rose-600">
             {zeroStockItems.length} Items
           </span>
-          <span className="text-[11px] text-slate-500 mt-0.5 block">Immediate reorder required</span>
+          <span className="text-[11px] text-slate-500 mt-1 block">Immediate reorder required</span>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium block">Low Stock Threshold</span>
-          <span className="text-2xl font-bold text-amber-600 mt-1 block">
+        <div className="bg-white p-4 md:p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+          <span className="text-xs text-slate-500 font-semibold block">LOW STOCK THRESHOLD</span>
+          <span className="text-2xl font-bold text-amber-600 mt-2 block">
             {lowStockItems.length} Items
           </span>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">Below buffer safety limits</span>
+          <span className="text-[11px] text-slate-400 mt-1 block">Below buffer safety limits</span>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium block">Capital Machinery</span>
-          <span className="text-2xl font-bold text-slate-900 mt-1 block">
+        <div className="bg-white p-4 md:p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+          <span className="text-xs text-slate-500 font-semibold block">CAPITAL MACHINERY</span>
+          <span className="text-2xl font-bold text-slate-900 mt-2 block">
             {(state.machineryAssets || []).length} Units
           </span>
-          <span className="text-[11px] text-emerald-600 mt-0.5 block">100% AMC Covered</span>
+          <span className="text-[11px] text-emerald-600 mt-1 block">Tracked assets</span>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
+      <div className="flex items-center gap-2 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
         {[
-          { id: 'stock', label: 'Stock Master & Ledger', icon: Boxes, count: (state.stockItems || []).length },
+          { id: 'stock', label: 'Stock Ledger', icon: Boxes, count: stockItems.length },
           { id: 'grn', label: 'Goods Receipt Notes (GRN)', icon: Truck, count: (state.grnRecords || []).length },
           { id: 'issues', label: 'Site Stock Issues', icon: ArrowUpRight, count: (state.stockIssues || []).length },
           { id: 'uniforms', label: 'Uniform Allocation & Cycles', icon: Shirt, count: (state.uniformAllocations || []).length },
@@ -203,16 +270,17 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
               key={tab.id}
               id={`tab-stores-${tab.id}`}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3.5 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 ${
+              aria-pressed={isActive}
+              className={`shrink-0 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2 ${
                 isActive 
-                  ? 'bg-teal-700 text-white shadow-md' 
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  ? 'bg-teal-800 text-white shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-teal-200' : 'text-slate-500'}`} />
+              <Icon className={`w-4 h-4 ${isActive ? 'text-teal-200' : 'text-slate-400'}`} />
               <span>{tab.label}</span>
               <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                isActive ? 'bg-teal-800 text-teal-200' : 'bg-slate-100 text-slate-600'
+                isActive ? 'bg-white/10 text-teal-100' : 'bg-slate-100 text-slate-500'
               }`}>
                 {tab.count}
               </span>
@@ -225,7 +293,7 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
       {activeTab === 'stock' && (
         <div className="space-y-4">
           {/* Filters Row */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
             <div className="relative w-full md:w-80">
               <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
               <input
@@ -234,7 +302,7 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
                 placeholder="Search item code, material name..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600/20 focus:border-teal-600"
               />
             </div>
 
@@ -242,7 +310,7 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
               <select
                 value={categoryFilter}
                 onChange={e => setCategoryFilter(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-slate-200 text-xs font-medium bg-slate-50 focus:outline-none"
+                className="px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-medium bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
               >
                 <option value="ALL">All Categories</option>
                 <option value="Uniforms">Uniforms</option>
@@ -258,7 +326,7 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
               <select
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-slate-200 text-xs font-medium bg-slate-50 focus:outline-none"
+                className="px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-medium bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
               >
                 <option value="ALL">All Stock Levels</option>
                 <option value="ZERO">Zero Stock Only</option>
@@ -271,8 +339,8 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
           {/* Stock Table */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+              <table className="w-full min-w-[980px] text-left text-xs">
+                <thead className="bg-slate-50/90 text-slate-600 font-semibold border-b border-slate-200">
                   <tr>
                     <th className="p-3.5">Item Code & Name</th>
                     <th className="p-3.5">Category</th>
@@ -288,29 +356,33 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filteredStock.map(item => {
-                    const isZero = item.closing_stock === 0;
-                    const isLow = item.closing_stock > 0 && item.closing_stock <= item.min_threshold;
+                    const closingStock = Number(item.closing_stock) || 0;
+                    const minThreshold = Number(item.min_threshold) || 0;
+                    const unitRate = Number(item.unit_rate ?? item.unit_cost) || 0;
+                    const totalValue = Number(item.total_value) || closingStock * unitRate;
+                    const isZero = closingStock === 0;
+                    const isLow = closingStock > 0 && closingStock <= minThreshold;
                     return (
                       <tr key={item.id} className="hover:bg-slate-50/80 transition">
                         <td className="p-3.5 font-medium text-slate-900">
-                          <div>{item.name}</div>
-                          <span className="text-[11px] text-slate-400 font-mono">{item.item_code} • {item.location_bin}</span>
+                          <div>{item.name || 'Unnamed item'}</div>
+                          <span className="text-[11px] text-slate-400 font-mono">{item.item_code || 'No SKU'} • {item.location || item.location_bin || 'Location not set'}</span>
                         </td>
                         <td className="p-3.5">
                           <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-medium">
-                            {item.category}
+                            {item.category || 'Uncategorized'}
                           </span>
                         </td>
-                        <td className="p-3.5 text-right font-mono text-slate-700">₹{item.unit_rate.toLocaleString()}</td>
-                        <td className="p-3.5 text-right text-slate-600">{item.opening_stock} {item.unit}</td>
-                        <td className="p-3.5 text-right text-emerald-600 font-semibold">+{item.receipts}</td>
-                        <td className="p-3.5 text-right text-rose-600 font-semibold">-{item.issues}</td>
+                        <td className="p-3.5 text-right font-mono text-slate-700">₹{unitRate.toLocaleString()}</td>
+                        <td className="p-3.5 text-right text-slate-600">{Number(item.opening_stock) || 0} {item.unit || ''}</td>
+                        <td className="p-3.5 text-right text-emerald-600 font-semibold">+{Number(item.receipts) || 0}</td>
+                        <td className="p-3.5 text-right text-rose-600 font-semibold">-{Number(item.issues) || 0}</td>
                         <td className="p-3.5 text-right font-bold text-slate-900 text-sm">
-                          {item.closing_stock} {item.unit}
+                          {closingStock} {item.unit || ''}
                         </td>
-                        <td className="p-3.5 text-right text-slate-500">{item.min_threshold} {item.unit}</td>
+                        <td className="p-3.5 text-right text-slate-500">{minThreshold} {item.unit || ''}</td>
                         <td className="p-3.5 text-right font-bold text-slate-900">
-                          ₹{item.total_value.toLocaleString()}
+                          ₹{totalValue.toLocaleString()}
                         </td>
                         <td className="p-3.5 text-center">
                           {isZero ? (
@@ -330,6 +402,17 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
                       </tr>
                     );
                   })}
+                  {filteredStock.length === 0 && (
+                    <tr>
+                      <td colSpan={10} className="px-6 py-14 text-center">
+                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                          <Package className="h-6 w-6" />
+                        </div>
+                        <p className="text-sm font-semibold text-slate-700">No inventory items found</p>
+                        <p className="mt-1 text-xs text-slate-500">Try changing your filters or add a new stock item.</p>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -355,40 +438,51 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold px-2 py-0.5 bg-teal-900 text-teal-100 border border-teal-700/50 rounded-md">
-                      {grn.id}
+                      {grn.grn_number || grn.id}
                     </span>
-                    <span className="text-xs text-slate-500 font-mono">PO: {grn.po_number}</span>
+                    <span className="text-xs text-slate-500 font-mono">PO: {grn.po_number || '—'}</span>
                   </div>
 
                   <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
                     grn.inspection_status === 'Passed' ? 'bg-emerald-100 text-emerald-800' :
-                    grn.inspection_status === 'Partially Rejected' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
+                    grn.inspection_status === 'Passed with Deviation' || grn.inspection_status === 'Pending' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
                   }`}>
-                    {grn.inspection_status}
+                    {grn.inspection_status || 'Pending'}
                   </span>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900">{grn.vendor_name}</h4>
-                  <p className="text-xs text-slate-500">Challan / DC No: {grn.delivery_challan_no} • Date: {grn.grn_date}</p>
+                  <h4 className="text-sm font-bold text-slate-900">{grn.vendor_name || 'Vendor not specified'}</h4>
+                  <p className="text-xs text-slate-500">
+                    Challan / DC No: {grn.dc_number || '—'} • Received: {grn.receipt_date || '—'}
+                  </p>
                 </div>
 
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs space-y-2">
                   <div className="font-semibold text-slate-800">Inwarded Items:</div>
-                  {(grn.items || []).map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-center text-slate-600 border-t border-slate-200/50 pt-1 text-[11px]">
-                      <span>{item.item_name} (PO: {item.quantity_ordered})</span>
-                      <span className="font-bold text-emerald-700">Accepted: {item.quantity_accepted}</span>
-                    </div>
-                  ))}
+                  <div className="flex justify-between items-center text-slate-600 border-t border-slate-200/50 pt-1 text-[11px]">
+                    <span>{grn.item_name || 'Unspecified item'} (Ordered: {Number(grn.quantity_ordered) || 0})</span>
+                    <span className="font-bold text-emerald-700">
+                      Accepted: {Number(grn.quantity_accepted) || 0} / Received: {Number(grn.quantity_received) || 0}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
-                  <span>Inspector: <b>{grn.inspected_by}</b></span>
-                  <span className="text-emerald-700 font-bold">Ledger Updated</span>
+                  <span>Inspector: <b>{grn.inspector_name || 'Not assigned'}</b></span>
+                  <span className={`font-bold ${grn.stores_entered ? 'text-emerald-700' : 'text-amber-700'}`}>
+                    {grn.stores_entered ? 'Ledger Updated' : 'Pending Inwarding'}
+                  </span>
                 </div>
               </div>
             ))}
+            {(state.grnRecords || []).length === 0 && (
+              <div className="md:col-span-2 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
+                <Truck className="mx-auto h-8 w-8 text-slate-300" />
+                <p className="mt-3 text-sm font-semibold text-slate-700">No goods receipts recorded</p>
+                <p className="mt-1 text-xs text-slate-500">Goods Receipt Notes will appear here when available.</p>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -408,32 +502,37 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
               <div key={issue.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md">
-                    {issue.id}
+                    {issue.issue_number || issue.id}
                   </span>
-                  <span className="text-xs font-semibold text-slate-500">{issue.issue_date}</span>
+                  <span className="text-xs font-semibold text-slate-500">{issue.date || '—'}</span>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900">{issue.site_name}</h4>
-                  <p className="text-xs text-slate-500">Requisition No: {issue.requisition_no}</p>
+                  <h4 className="text-sm font-bold text-slate-900">{issue.site_name || 'Site not specified'}</h4>
+                  <p className="text-xs text-slate-500">{issue.department || 'Department not specified'} • {issue.employee_name || 'Employee not specified'}</p>
                 </div>
 
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs space-y-1.5">
                   <div className="font-semibold text-slate-800">Dispatched Materials:</div>
-                  {(issue.items || []).map((itm, idx) => (
-                    <div key={idx} className="flex justify-between text-slate-600 text-[11px]">
-                      <span>{itm.item_name}</span>
-                      <span className="font-bold text-slate-900">{itm.quantity_issued} {itm.unit}</span>
-                    </div>
-                  ))}
+                  <div className="flex justify-between text-slate-600 text-[11px]">
+                    <span>{issue.item_name || 'Unspecified item'}</span>
+                    <span className="font-bold text-slate-900">{Number(issue.quantity) || 0}</span>
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
-                  <span>Issued By: <b>{issue.issued_by}</b></span>
-                  <span>Received By: <b>{issue.received_by_signature}</b></span>
+                  <span>Authorized By: <b>{issue.authorised_by || '—'}</b></span>
+                  <span>Received By: <b>{issue.receiver_signature || '—'}</b></span>
                 </div>
               </div>
             ))}
+            {(state.stockIssues || []).length === 0 && (
+              <div className="md:col-span-2 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
+                <ArrowUpRight className="mx-auto h-8 w-8 text-slate-300" />
+                <p className="mt-3 text-sm font-semibold text-slate-700">No site stock issues recorded</p>
+                <p className="mt-1 text-xs text-slate-500">Material dispatch records will appear here.</p>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -460,7 +559,7 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
                     <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full ${
                       isOverdue ? 'bg-rose-100 text-rose-800 animate-pulse' : 'bg-emerald-100 text-emerald-800'
                     }`}>
-                      {isOverdue ? 'Replacement Overdue!' : `${daysUntilDue}d to cycle`}
+                      {ua.status === 'Returned' ? 'Returned' : isOverdue ? 'Replacement Overdue!' : `${daysUntilDue}d to cycle`}
                     </span>
                   </div>
 
@@ -476,7 +575,7 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Size & Set:</span>
-                      <span className="font-semibold text-slate-800">{ua.size} (Qty: {ua.quantity})</span>
+                      <span className="font-semibold text-slate-800">{ua.size} (Qty: {Number(ua.quantity_issued) || 0})</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500">Last Issued:</span>
@@ -492,8 +591,9 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
                     <button
                       onClick={() => alert(`Issuing fresh uniform replacement for ${ua.employee_name}...`)}
                       className="w-full py-1.5 bg-teal-700 hover:bg-teal-600 text-white text-xs font-semibold rounded-xl transition"
+                      disabled={ua.status === 'Returned'}
                     >
-                      Issue Replacement Set
+                      {ua.status === 'Returned' ? 'Allocation Returned' : 'Issue Replacement Set'}
                     </button>
                   </div>
                 </div>
@@ -517,31 +617,38 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
             {(state.machineryAssets || []).map(m => (
               <div key={m.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-slate-500 font-mono">{m.asset_code}</span>
+                  <span className="text-xs font-bold text-slate-500 font-mono">{m.asset_id || m.id}</span>
                   <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full ${
-                    m.status === 'Operational' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                    m.condition === 'Operational' ? 'bg-emerald-100 text-emerald-800' :
+                    m.condition === 'Under Maintenance' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
                   }`}>
-                    {m.status}
+                    {m.condition || 'Status unknown'}
                   </span>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900">{m.machine_name}</h4>
-                  <p className="text-xs text-slate-500">Make: {m.make_model} (S/N: {m.serial_number})</p>
+                  <h4 className="text-sm font-bold text-slate-900">{m.equipment_name || 'Unnamed equipment'}</h4>
+                  <p className="text-xs text-slate-500">
+                    {m.make || 'Make unknown'} {m.model || ''} {m.serial_number ? `(S/N: ${m.serial_number})` : ''}
+                  </p>
                 </div>
 
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs space-y-1">
                   <div className="flex justify-between">
                     <span className="text-slate-500">Assigned Site:</span>
-                    <span className="font-semibold text-slate-800">{m.current_site}</span>
+                    <span className="font-semibold text-slate-800">{m.current_location || 'Not assigned'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">AMC Vendor:</span>
-                    <span className="text-slate-700">{m.amc_vendor}</span>
+                    <span className="text-slate-700">{m.amc_vendor || 'Not assigned'}</span>
                   </div>
                   <div className="flex justify-between border-t border-slate-200/50 pt-1">
                     <span className="text-slate-500">Next Maintenance:</span>
-                    <span className="font-semibold text-emerald-700">{m.next_maintenance_due}</span>
+                    <span className="font-semibold text-emerald-700">{m.next_maintenance_due || 'Not scheduled'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Purchase Value:</span>
+                    <span className="font-semibold text-slate-800">₹{(Number(m.purchase_value) || 0).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -659,6 +766,100 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
                 className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow"
               >
                 Save SKU
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showIssueStockModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-xl space-y-5 rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-teal-700">Inventory movement</p>
+                <h3 className="mt-1 text-xl font-bold text-slate-900">Issue materials to a site</h3>
+                <p className="mt-1 text-sm text-slate-500">The issue record and stock balance update together.</p>
+              </div>
+              <button onClick={() => setShowIssueStockModal(false)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Close issue form">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <label className="text-xs font-semibold text-slate-700">
+                Stock item
+                <select
+                  value={issueForm.itemId}
+                  onChange={event => setIssueForm({ ...issueForm, itemId: event.target.value })}
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-normal"
+                >
+                  <option value="">Select an item</option>
+                  {stockItems.filter(item => Number(item.closing_stock) > 0).map(item => (
+                    <option key={item.id} value={item.id}>{item.name} ({item.closing_stock} {item.unit})</option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Destination site
+                <select
+                  value={issueForm.siteId}
+                  onChange={event => setIssueForm({ ...issueForm, siteId: event.target.value })}
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-normal"
+                >
+                  <option value="">Select a site</option>
+                  {(state.sites || []).map(site => (
+                    <option key={site.id} value={site.id}>{site.name || site.id}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Recipient name
+                <input
+                  value={issueForm.employeeName}
+                  onChange={event => setIssueForm({ ...issueForm, employeeName: event.target.value })}
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal"
+                  placeholder="Name of receiving employee"
+                />
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Department
+                <input
+                  value={issueForm.department}
+                  onChange={event => setIssueForm({ ...issueForm, department: event.target.value })}
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal"
+                  placeholder="Operations"
+                />
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Quantity
+                <input
+                  type="number"
+                  min="1"
+                  value={issueForm.quantity}
+                  onChange={event => setIssueForm({ ...issueForm, quantity: Number(event.target.value) })}
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal"
+                />
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Receiver acknowledgment
+                <input
+                  value={issueForm.receiverSignature}
+                  onChange={event => setIssueForm({ ...issueForm, receiverSignature: event.target.value })}
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal"
+                  placeholder="Name or acknowledgment"
+                />
+              </label>
+            </div>
+
+            {issueError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{issueError}</p>}
+
+            <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+              <button onClick={() => setShowIssueStockModal(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                Cancel
+              </button>
+              <button onClick={handleIssueStock} className="rounded-xl bg-teal-800 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-teal-700">
+                Confirm Issue
               </button>
             </div>
           </div>
