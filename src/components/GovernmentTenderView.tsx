@@ -183,6 +183,8 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
     portal_tender_id: '',
     tender_url: '',
     scope_of_work: '',
+    service_category: '',
+    total_manpower: 0,
     location: 'Bengaluru',
     tender_type: 'Open',
     estimated_tender_value: 0,
@@ -336,6 +338,8 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
       portal_tender_id: newTender.portal_tender_id || `PORTAL-${Date.now().toString().slice(-6)}`,
       tender_url: newTender.tender_url || 'https://gem.gov.in',
       scope_of_work: newTender.scope_of_work || '',
+      service_category: newTender.service_category?.trim() || '',
+      total_manpower: Number(newTender.total_manpower) || 0,
       location: newTender.location || 'Bengaluru',
       tender_type: newTender.tender_type || 'Open',
       estimated_tender_value: Number(newTender.estimated_tender_value) || 0,
@@ -1096,6 +1100,8 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
                   <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 uppercase tracking-wider font-mono text-[10px]">
                     <th className="p-3">Tender ID</th>
                     <th className="p-3">Category</th>
+                    <th className="p-3">Service Category</th>
+                    <th className="p-3 text-right">Total Manpower</th>
                     <th className="p-3">Tender Name & Client</th>
                     <th className="p-3">Portal / NIT</th>
                     <th className="p-3 text-right">Value (INR)</th>
@@ -1119,6 +1125,10 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
                           <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-bold text-[10px]">
                             {t.government_category}
                           </span>
+                        </td>
+                        <td className="p-3 text-slate-700">{t.service_category || '—'}</td>
+                        <td className="p-3 text-right font-mono font-semibold text-slate-700">
+                          {Number(t.total_manpower) > 0 ? Number(t.total_manpower).toLocaleString() : '—'}
                         </td>
                         <td className="p-3">
                           <div className="font-bold text-slate-900">{t.tender_name}</div>
@@ -1956,6 +1966,30 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
                   <option value="Municipal">Municipal / Urban Bodies</option>
                   <option value="Other">Other</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Service Category</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Housekeeping, Security, Facility Management"
+                  value={newTender.service_category || ''}
+                  onChange={e => setNewTender({ ...newTender, service_category: e.target.value })}
+                  className="w-full p-2.5 border border-slate-200 rounded-xl"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Total Manpower</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="e.g. 120"
+                  value={newTender.total_manpower || ''}
+                  onChange={e => setNewTender({ ...newTender, total_manpower: Number(e.target.value) })}
+                  className="w-full p-2.5 border border-slate-200 rounded-xl font-mono"
+                />
               </div>
 
               <div>

@@ -348,6 +348,8 @@ export interface GovernmentTender {
   portal_tender_id: string;
   tender_url: string;
   scope_of_work: string;
+  service_category?: string;
+  total_manpower?: number;
   location: string;
   tender_type: 'Open' | 'Limited' | 'Single' | 'Rate Contract' | 'EOI' | 'RFP';
   estimated_tender_value: number;
