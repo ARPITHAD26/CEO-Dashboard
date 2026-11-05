@@ -344,6 +344,7 @@ export interface GovernmentTender {
   client_name: string;
   tender_name: string;
   nit_reference_number: string;
+  nit_reference_date?: string;
   portal_name: 'GeM' | 'CPPP' | 'KPPP' | 'IREPS' | 'Other';
   portal_tender_id: string;
   tender_url: string;
@@ -360,6 +361,7 @@ export interface GovernmentTender {
   doc_download_start: string;
   doc_download_end: string;
   pre_bid_meeting_date?: string;
+  previous_meeting_date?: string;
   query_submission_last_date?: string;
   last_date_of_submission: string;
   technical_bid_opening_date?: string;

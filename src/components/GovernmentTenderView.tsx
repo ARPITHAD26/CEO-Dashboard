@@ -179,6 +179,7 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
     client_name: '',
     tender_name: '',
     nit_reference_number: '',
+    nit_reference_date: '',
     portal_name: 'GeM',
     portal_tender_id: '',
     tender_url: '',
@@ -334,6 +335,7 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
       client_name: newTender.client_name!,
       tender_name: newTender.tender_name!,
       nit_reference_number: newTender.nit_reference_number!,
+      nit_reference_date: newTender.nit_reference_date || '',
       portal_name: newTender.portal_name || 'GeM',
       portal_tender_id: newTender.portal_tender_id || `PORTAL-${Date.now().toString().slice(-6)}`,
       tender_url: newTender.tender_url || 'https://gem.gov.in',
@@ -347,6 +349,7 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
       publication_date: newTender.publication_date || new Date().toISOString().split('T')[0],
       doc_download_start: newTender.doc_download_start || new Date().toISOString().split('T')[0],
       doc_download_end: newTender.doc_download_end || '',
+      previous_meeting_date: newTender.previous_meeting_date || '',
       last_date_of_submission: newTender.last_date_of_submission || '',
       bid_validity_period: newTender.bid_validity_period || '90 Days',
       emd_amount: Number(newTender.emd_amount) || 0,
@@ -1104,6 +1107,9 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
                     <th className="p-3 text-right">Total Manpower</th>
                     <th className="p-3">Tender Name & Client</th>
                     <th className="p-3">Portal / NIT</th>
+                    <th className="p-3">NIT / Tender Ref Date</th>
+                    <th className="p-3">Previous Meeting Date</th>
+                    <th className="p-3">Corrigendum / Addendum</th>
                     <th className="p-3 text-right">Value (INR)</th>
                     <th className="p-3">Submission Due</th>
                     <th className="p-3">Readiness</th>
@@ -1137,6 +1143,17 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
                         <td className="p-3">
                           <div className="font-bold text-slate-700">{t.portal_name}</div>
                           <div className="text-[10px] font-mono text-slate-400">{t.nit_reference_number}</div>
+                        </td>
+                        <td className="p-3 font-mono text-slate-600">{t.nit_reference_date || '—'}</td>
+                        <td className="p-3 font-mono text-slate-600">{t.previous_meeting_date || t.pre_bid_meeting_date || '—'}</td>
+                        <td className="p-3">
+                          {t.corrigendums?.length ? (
+                            <span className="font-semibold text-amber-700">
+                              {t.corrigendums.length} issued
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">None</span>
+                          )}
                         </td>
                         <td className="p-3 text-right font-mono font-bold text-slate-900">
                           ₹{(t.estimated_tender_value / 10000000).toFixed(2)} Cr
@@ -2032,6 +2049,26 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
                   placeholder="e.g. NIT-2026-SWR-047"
                   value={newTender.nit_reference_number}
                   onChange={e => setNewTender({ ...newTender, nit_reference_number: e.target.value })}
+                  className="w-full p-2.5 border border-slate-200 rounded-xl font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">NIT / Tender Ref Date</label>
+                <input
+                  type="date"
+                  value={newTender.nit_reference_date || ''}
+                  onChange={e => setNewTender({ ...newTender, nit_reference_date: e.target.value })}
+                  className="w-full p-2.5 border border-slate-200 rounded-xl font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Previous Meeting Date</label>
+                <input
+                  type="date"
+                  value={newTender.previous_meeting_date || ''}
+                  onChange={e => setNewTender({ ...newTender, previous_meeting_date: e.target.value })}
                   className="w-full p-2.5 border border-slate-200 rounded-xl font-mono"
                 />
               </div>
