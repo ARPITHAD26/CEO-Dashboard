@@ -691,11 +691,11 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
             onChange={e => setPortalFilter(e.target.value)}
             className="px-3 py-1.5 text-xs border border-slate-200 rounded-xl bg-slate-50/50 font-medium text-slate-700"
           >
-            <option value="ALL">All Portals (GeM / CPPP / IREPS / State)</option>
+            <option value="ALL">All Portals (GeM / CPPP / KPPP / IREPS)</option>
             <option value="GeM">GeM Portal</option>
             <option value="CPPP">CPPP (Central eProcure)</option>
+            <option value="KPPP">KPPP (Karnataka Public Procurement)</option>
             <option value="IREPS">IREPS (Railways)</option>
-            <option value="State Portal">State Portals</option>
             <option value="Other">Other Portals</option>
           </select>
 
@@ -2046,7 +2046,7 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
                   <option value="GeM">GeM (Government e-Marketplace)</option>
                   <option value="CPPP">CPPP (Central Public Procurement)</option>
                   <option value="IREPS">IREPS (Indian Railways)</option>
-                  <option value="State Portal">State Portal</option>
+                  <option value="KPPP">KPPP (Karnataka Public Procurement)</option>
                   <option value="Other">Other</option>
                 </select>
               </div>

@@ -344,7 +344,7 @@ export interface GovernmentTender {
   client_name: string;
   tender_name: string;
   nit_reference_number: string;
-  portal_name: 'GeM' | 'CPPP' | 'State Portal' | 'IREPS' | 'Other';
+  portal_name: 'GeM' | 'CPPP' | 'KPPP' | 'IREPS' | 'Other';
   portal_tender_id: string;
   tender_url: string;
   scope_of_work: string;
