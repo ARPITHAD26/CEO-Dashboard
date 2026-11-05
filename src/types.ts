@@ -497,6 +497,7 @@ export interface ComparativeStatement {
 
 export interface PurchaseOrder {
   id: string;
+  indent_request_id?: string;
   po_number: string;
   vendor_id: string;
   vendor_name: string;
@@ -520,6 +521,7 @@ export interface PurchaseOrder {
   status: 'Draft' | 'Approval' | 'Released' | 'Acknowledged' | 'Partially Delivered' | 'Fully Delivered' | 'Closed' | 'Cancelled';
   payment_status: 'Invoice Received' | 'Under Verification' | 'Approved' | 'Payment Pending' | 'Payment Released' | 'Overdue';
   approved_by: string;
+  document_url?: string;
 }
 
 // -------------------------------------------------------------
@@ -2356,4 +2358,3 @@ export interface AIStudioProjectReview {
   assumptions: string[];
   missingDataNotes: string[];
 }
-
