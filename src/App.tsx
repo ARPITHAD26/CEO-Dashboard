@@ -238,8 +238,10 @@ export default function App() {
   return (
     <div className={`min-h-screen bg-[#05070A] text-slate-200 font-sans flex relative overflow-hidden ${theme}`}>
 
-      {/* Decorative background vectors */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0B0F19_1px,transparent_1px),linear-gradient(to_bottom,#0B0F19_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-35 pointer-events-none" />
+      {/* Keep the procurement workspace clean while preserving the dashboard grid elsewhere. */}
+      {activeTab !== 'Procurement Head' && (
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0B0F19_1px,transparent_1px),linear-gradient(to_bottom,#0B0F19_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-35 pointer-events-none" />
+      )}
 
       {/* 1. Dashboard Left Sidebar */}
       {/* Mobile backdrop */}
