@@ -330,6 +330,8 @@ export interface GovTenderCorrigendumEntry {
   revised_emd?: number;
   revised_boq?: boolean;
   revised_eligibility?: string;
+  document_name?: string;
+  document_data?: string;
   management_reviewed: boolean;
   reviewed_by?: string;
   review_date?: string;
@@ -345,6 +347,9 @@ export interface GovernmentTender {
   tender_name: string;
   nit_reference_number: string;
   nit_reference_date?: string;
+  corrigendum_addendum_details?: string;
+  corrigendum_addendum_document_name?: string;
+  corrigendum_addendum_document_data?: string;
   portal_name: 'GeM' | 'CPPP' | 'KPPP' | 'IREPS' | 'Other';
   portal_tender_id: string;
   tender_url: string;
