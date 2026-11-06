@@ -457,9 +457,6 @@ export default function ProcurementView({
                 Supply Chain Control Tower
               </span>
             </h1>
-            <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
-              Centralized portal governing tender bids, vendor partnerships, stores & stock ledger, 3-way match purchase indents, and team productivity tracking.
-            </p>
           </div>
         </div>
 
