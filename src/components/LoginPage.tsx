@@ -308,7 +308,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                             />
                           ) : user.role === 'Procurement Head' ? (
                             <img
-                              src="/procurement-head-profile.jpg"
+                              src="/procurement-head-profile.jpg?v=20261106"
                               alt="Procurement Head"
                               style={{
                                 width: '28px',

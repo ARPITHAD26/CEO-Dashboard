@@ -343,14 +343,14 @@ export default function ProcurementView({
             {/* High Definition Image Container */}
             <div className="relative rounded-2xl overflow-hidden border-2 border-slate-700/80 bg-black shadow-inner flex items-center justify-center min-h-[380px] max-h-[520px]">
               <img 
-                src="/procurement-head-profile.jpg" 
+                src="/procurement-head-profile.jpg?v=20261106"
                 alt="Procurement Head - Executive Portrait" 
                 className="w-full max-h-[500px] object-contain"
                 style={{ imageRendering: '-webkit-optimize-contrast' }}
               />
               <div className="absolute top-2.5 left-2.5 bg-black/85 backdrop-blur-md px-2.5 py-1 rounded-lg border border-cyan-400/40 text-[9.5px] font-mono text-cyan-300 font-bold flex items-center gap-1.5 shadow-lg">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>ORIGINAL HD • 1024 × 682</span>
+                <span>ORIGINAL HD • 768 × 813</span>
               </div>
             </div>
 
@@ -381,7 +381,7 @@ export default function ProcurementView({
               </div>
               <div className="flex items-center gap-2">
                 <a
-                  href="/procurement-head-profile.jpg"
+                  href="/procurement-head-profile.jpg?v=20261106"
                   download="Spoorthy_Procurement_Head_Portrait_HD.jpg"
                   className="px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
                 >
@@ -414,7 +414,7 @@ export default function ProcurementView({
             
             <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-white/90 shadow-xl bg-slate-900">
               <img 
-                src="/procurement-head-profile.jpg" 
+                src="/procurement-head-profile.jpg?v=20261106"
                 alt="Procurement Head" 
                 className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
                 style={{ imageRendering: '-webkit-optimize-contrast' }}

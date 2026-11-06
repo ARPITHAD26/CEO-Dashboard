@@ -333,7 +333,7 @@ export default function App() {
               ) : currentUser.role === 'Procurement Head' && activeTab !== 'Admin' ? (
                 <div className="relative shrink-0">
                   <img
-                    src="/procurement-head-profile.jpg"
+                    src="/procurement-head-profile.jpg?v=20261106"
                     alt="Procurement Head Profile"
                     className="w-11 h-11 rounded-xl object-cover object-top border-2 border-cyan-400/70 shadow-[0_0_12px_rgba(6,182,212,0.25)]"
                     style={{ imageRendering: '-webkit-optimize-contrast' }}
@@ -719,7 +719,7 @@ export default function App() {
               )}
               {currentUser.role === 'Procurement Head' && activeTab !== 'Admin' && (
                 <img
-                  src="/procurement-head-profile.jpg"
+                  src="/procurement-head-profile.jpg?v=20261106"
                   alt="Procurement Head"
                   className="w-8 h-8 rounded-lg object-cover object-top border border-cyan-400/50 shadow-xs"
                   style={{ imageRendering: '-webkit-optimize-contrast' }}
