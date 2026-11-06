@@ -13,6 +13,9 @@ import { AppState, Role, SubRoleDefinition } from '../types';
 const COLLECTIONS = {
   purchaseRequests: 'purchaseRequests',
   vendors: 'vendors',
+  procurementMasterCategories: 'procurementMasterCategories',
+  procurementMasterUnits: 'procurementMasterUnits',
+  procurementTeamMembers: 'procurementTeamMembers',
   invoices: 'invoices',
   expenses: 'expenses',
   leads: 'leads',
@@ -125,6 +128,9 @@ export async function fetchAppStateFromFirestore(): Promise<AppState> {
           return {
             purchaseRequests: st.purchaseRequests || [],
             vendors: st.vendors || [],
+            procurementMasterCategories: st.procurementMasterCategories || [],
+            procurementMasterUnits: st.procurementMasterUnits || [],
+            procurementTeamMembers: st.procurementTeamMembers || [],
             invoices: st.invoices || [],
             expenses: st.expenses || [],
             leads: st.leads || [],
@@ -205,6 +211,9 @@ export async function fetchAppStateFromFirestore(): Promise<AppState> {
   return {
     purchaseRequests: state.purchaseRequests || [],
     vendors: state.vendors || [],
+    procurementMasterCategories: state.procurementMasterCategories || [],
+    procurementMasterUnits: state.procurementMasterUnits || [],
+    procurementTeamMembers: state.procurementTeamMembers || [],
     invoices: state.invoices || [],
     expenses: state.expenses || [],
     leads: state.leads || [],

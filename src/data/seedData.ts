@@ -3045,6 +3045,13 @@ export function getSeedState(): AppState {
   return {
     purchaseRequests: [...INITIAL_PURCHASE_REQUESTS],
     vendors: [...INITIAL_VENDORS],
+    procurementMasterCategories: [],
+    procurementMasterUnits: [],
+    procurementTeamMembers: [
+      { id: 'PROC-TEAM-001', name: 'Deepika Nair', title: 'Senior Procurement Executive', email: 'deepika.nair@spoorthy.com', phone: '', active: true },
+      { id: 'PROC-TEAM-002', name: 'Suresh Menon', title: 'Stores & Inventory Manager', email: '', phone: '', active: true },
+      { id: 'PROC-TEAM-003', name: 'Kavita Joshi', title: 'Vendor Billing & Accounts SPOC', email: '', phone: '', active: true }
+    ],
     invoices: [...INITIAL_INVOICES],
     expenses: [...INITIAL_EXPENSES],
     leads: [...INITIAL_LEADS],
@@ -3137,6 +3144,9 @@ export function getEmptyState(): AppState {
   return {
     purchaseRequests: [],
     vendors: [],
+    procurementMasterCategories: [],
+    procurementMasterUnits: [],
+    procurementTeamMembers: [],
     invoices: [],
     expenses: [],
     leads: [],

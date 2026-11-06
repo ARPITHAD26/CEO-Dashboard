@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { StoresAndInventoryView } from './StoresAndInventoryView';
 import { ProcurementTeamTaskView } from './ProcurementTeamTaskView';
+import { ProcurementMasterDataView } from './ProcurementMasterDataView';
 
 interface ProcurementViewProps {
   state: AppState;
@@ -26,12 +27,13 @@ export default function ProcurementView({
   subRoleName,
   currentRole = 'Procurement Head'
 }: ProcurementViewProps) {
-  const allTabs: { id: 'requests' | 'stores' | 'teamtasks' | 'vendors' | 'tasks'; label: string; icon: any }[] = [
+  const allTabs: { id: 'requests' | 'stores' | 'teamtasks' | 'vendors' | 'tasks' | 'master-data'; label: string; icon: any }[] = [
     { id: 'requests', label: 'Purchase Indents & 3-Way Match', icon: ShoppingBag },
     { id: 'stores', label: 'Stores & Material Ledger', icon: Boxes },
     { id: 'teamtasks', label: 'Team Daily Tasks & EOD', icon: CheckSquare },
     { id: 'vendors', label: 'Registered Vendors', icon: UserCheck },
-    { id: 'tasks', label: 'Assigned System Tasks', icon: Layers }
+    { id: 'tasks', label: 'Assigned System Tasks', icon: Layers },
+    { id: 'master-data', label: 'Master Data', icon: Sliders }
   ];
 
   const availableTabs = allowedSubViews && allowedSubViews.length > 0
@@ -48,7 +50,7 @@ export default function ProcurementView({
   });
   const [editingPrId, setEditingPrId] = useState<string | null>(null);
   const [editingVendorId, setEditingVendorId] = useState<string | null>(null);
-  const [activeSubTab, setActiveSubTab] = useState<'requests' | 'stores' | 'teamtasks' | 'vendors' | 'tasks'>(defaultTab);
+  const [activeSubTab, setActiveSubTab] = useState<'requests' | 'stores' | 'teamtasks' | 'vendors' | 'tasks' | 'master-data'>(defaultTab);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isPurchaseOrderModalOpen, setIsPurchaseOrderModalOpen] = useState(false);
@@ -559,6 +561,14 @@ export default function ProcurementView({
         />
       )}
 
+      {activeSubTab === 'master-data' && (
+        <ProcurementMasterDataView
+          state={state}
+          userEmail={currentUserEmail}
+          onUpdateState={onUpdateState}
+        />
+      )}
+
       {(activeSubTab === 'requests' || activeSubTab === 'vendors' || activeSubTab === 'tasks') && (
         /* Main Container */
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -833,8 +843,12 @@ export default function ProcurementView({
                     placeholder="e.g. Heavy Duty Scrubber brushes"
                     value={prForm.item || ''}
                     onChange={e => setPrForm({...prForm, item: e.target.value})}
+                    list="procurement-master-items"
                     className="w-full px-3 py-2 bg-background border border-border rounded-xl focus:outline-none focus:border-cyan-500 text-foreground"
                   />
+                  <datalist id="procurement-master-items">
+                    {state.stockItems.map(item => <option key={item.id} value={item.name}>{item.item_code}</option>)}
+                  </datalist>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">

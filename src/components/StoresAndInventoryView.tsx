@@ -58,6 +58,18 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
   const stockItems = Array.isArray(state.stockItems)
     ? state.stockItems.filter(item => item && typeof item === 'object')
     : [];
+  const categoryOptions = [...new Set([
+    'Uniforms', 'Shoes', 'PPE', 'Machinery', 'Tools', 'Office Equipment', 'Computers',
+    'Printers', 'Stationery', 'Consumables', 'Electrical Items', 'Housekeeping Materials',
+    'Other Assets', 'Chemicals',
+    ...(state.procurementMasterCategories || []).map(option => option.name),
+    ...stockItems.map(item => item.category)
+  ])].sort((a, b) => a.localeCompare(b));
+  const unitOptions = [...new Set([
+    'Nos', 'Pieces', 'Sets', 'Pairs', 'Boxes', 'Kg', 'Ltrs', 'Meters', 'Rolls', 'Packs',
+    ...(state.procurementMasterUnits || []).map(option => option.name),
+    ...stockItems.map(item => item.unit)
+  ])].sort((a, b) => a.localeCompare(b));
 
   // Filtered Stock Items
   const filteredStock = useMemo(() => {
@@ -313,14 +325,7 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
                 className="px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-medium bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
               >
                 <option value="ALL">All Categories</option>
-                <option value="Uniforms">Uniforms</option>
-                <option value="Shoes">Shoes</option>
-                <option value="PPE">PPE</option>
-                <option value="Machinery">Machinery</option>
-                <option value="Chemicals">Chemicals</option>
-                <option value="Housekeeping Materials">Housekeeping</option>
-                <option value="Tools">Tools</option>
-                <option value="Consumables">Consumables</option>
+                {categoryOptions.map(category => <option key={category} value={category}>{category}</option>)}
               </select>
 
               <select
@@ -695,29 +700,22 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
                 <label className="font-semibold text-slate-700 block mb-1">Category</label>
                 <select
                   value={newItem.category}
-                  onChange={e => setNewItem({ ...newItem, category: e.target.value as any })}
+                  onChange={e => setNewItem({ ...newItem, category: e.target.value })}
                   className="w-full p-2.5 border border-slate-200 rounded-xl bg-white"
                 >
-                  <option value="Uniforms">Uniforms</option>
-                  <option value="Shoes">Shoes</option>
-                  <option value="PPE">PPE</option>
-                  <option value="Machinery">Machinery</option>
-                  <option value="Chemicals">Chemicals</option>
-                  <option value="Housekeeping Materials">Housekeeping</option>
-                  <option value="Tools">Tools</option>
-                  <option value="Consumables">Consumables</option>
+                  {categoryOptions.map(category => <option key={category} value={category}>{category}</option>)}
                 </select>
               </div>
 
               <div>
                 <label className="font-semibold text-slate-700 block mb-1">Unit of Measure</label>
-                <input
-                  type="text"
+                <select
                   value={newItem.unit}
                   onChange={e => setNewItem({ ...newItem, unit: e.target.value })}
-                  placeholder="Pairs / Nos / Ltrs"
-                  className="w-full p-2.5 border border-slate-200 rounded-xl"
-                />
+                  className="w-full p-2.5 border border-slate-200 rounded-xl bg-white"
+                >
+                  {unitOptions.map(unit => <option key={unit} value={unit}>{unit}</option>)}
+                </select>
               </div>
 
               <div>

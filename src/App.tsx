@@ -150,6 +150,9 @@ export default function App() {
         )) {
           const stateWithInventory = {
             ...firestoreState,
+            procurementMasterCategories: firestoreState.procurementMasterCategories?.length ? firestoreState.procurementMasterCategories : state.procurementMasterCategories,
+            procurementMasterUnits: firestoreState.procurementMasterUnits?.length ? firestoreState.procurementMasterUnits : state.procurementMasterUnits,
+            procurementTeamMembers: firestoreState.procurementTeamMembers?.length ? firestoreState.procurementTeamMembers : state.procurementTeamMembers,
             stockItems: firestoreState.stockItems?.length ? firestoreState.stockItems : state.stockItems,
             stockTransactions: firestoreState.stockTransactions?.length ? firestoreState.stockTransactions : state.stockTransactions,
             grnRecords: firestoreState.grnRecords?.length ? firestoreState.grnRecords : state.grnRecords,

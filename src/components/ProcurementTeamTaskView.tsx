@@ -28,12 +28,14 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
   // Modals
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [showEodModal, setShowEodModal] = useState(false);
+  const activeTeamMembers = (state.procurementTeamMembers || []).filter(member => member.active);
+  const defaultAssignee = activeTeamMembers[0];
 
   // New Task Form State
   const [newTask, setNewTask] = useState<Partial<DailyProcurementTask>>({
     task_title: '',
-    assigned_to_name: 'Deepika Nair',
-    assigned_to_email: 'deepika.nair@spoorthy.com',
+    assigned_to_name: defaultAssignee?.name || '',
+    assigned_to_email: defaultAssignee?.email || '',
     priority: 'High',
     related_to: 'Tender',
     related_ref_id: '',
@@ -44,7 +46,7 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
 
   // New EOD Review State
   const [newEod, setNewEod] = useState<Partial<EodReviewRecord>>({
-    employee_name: 'Deepika Nair',
+    employee_name: defaultAssignee?.name || '',
     date: new Date().toISOString().split('T')[0],
     tasks_assigned: 4,
     tasks_completed: 3,
@@ -75,11 +77,10 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
     const set = new Set((state.dailyProcurementTasks || []).map(t => t.assigned_to_name));
     return Array.from(set);
   }, [state.dailyProcurementTasks]);
-
   // Save Task
   const handleSaveTask = () => {
-    if (!newTask.task_title) {
-      alert('Please provide task title.');
+    if (!newTask.task_title || !newTask.assigned_to_name) {
+      alert('Please provide a task title and select an active assignee from Procurement Master Data.');
       return;
     }
 
@@ -88,8 +89,8 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
       id: `DPT-${Date.now().toString().slice(-6)}`,
       task_code: taskCode,
       date: new Date().toISOString().split('T')[0],
-      assigned_to_name: newTask.assigned_to_name || 'Deepika Nair',
-      assigned_to_email: newTask.assigned_to_email || 'deepika.nair@spoorthy.com',
+      assigned_to_name: newTask.assigned_to_name,
+      assigned_to_email: newTask.assigned_to_email || undefined,
       task_title: newTask.task_title!,
       priority: newTask.priority || 'High',
       related_to: newTask.related_to || 'Tender',
@@ -129,7 +130,7 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
   const handleSaveEod = () => {
     const created: EodReviewRecord = {
       id: `EOD-${Date.now().toString().slice(-6)}`,
-      employee_name: newEod.employee_name || 'Deepika Nair',
+      employee_name: newEod.employee_name || defaultAssignee?.name || '',
       date: newEod.date || new Date().toISOString().split('T')[0],
       tasks_assigned: Number(newEod.tasks_assigned) || 3,
       tasks_completed: Number(newEod.tasks_completed) || 3,
@@ -469,38 +470,41 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              { name: 'Deepika Nair', role: 'Senior Procurement Executive', focus: 'Tenders & RFQs', tasks: 12, velocity: '94%' },
-              { name: 'Suresh Menon', role: 'Stores & Inventory Manager', focus: 'GRN, Issues & Stock Ledger', tasks: 8, velocity: '91%' },
-              { name: 'Kavita Joshi', role: 'Vendor Billing & Accounts SPOC', focus: 'Comparative Statements & Invoices', tasks: 9, velocity: '88%' }
-            ].map(m => (
-              <div key={m.name} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            {activeTeamMembers.map(member => {
+              const memberTasks = (state.dailyProcurementTasks || []).filter(task => task.assigned_to_name === member.name);
+              const reviews = (state.eodReviews || []).filter(review => review.employee_name === member.name);
+              const velocity = reviews.length
+                ? `${Math.round(reviews.reduce((sum, review) => sum + review.productivity_score, 0) / reviews.length)}%`
+                : 'No EOD review';
+              return (
+              <div key={member.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-600 to-cyan-700 text-white font-bold flex items-center justify-center text-sm shadow-xs">
-                    {m.name.split(' ').map(n => n[0]).join('')}
+                    {member.name.split(' ').map(n => n[0]).join('')}
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900">{m.name}</h4>
-                    <p className="text-xs text-slate-500">{m.role}</p>
+                    <h4 className="text-sm font-bold text-slate-900">{member.name}</h4>
+                    <p className="text-xs text-slate-500">{member.title}</p>
                   </div>
                 </div>
 
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs space-y-1.5">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Domain Focus:</span>
-                    <span className="font-semibold text-slate-800">{m.focus}</span>
+                    <span className="text-slate-500">Email:</span>
+                    <span className="font-semibold text-slate-800">{member.email || '—'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Monthly Tasks Cleared:</span>
-                    <span className="font-semibold text-slate-800">{m.tasks}</span>
+                    <span className="text-slate-500">Assigned Tasks:</span>
+                    <span className="font-semibold text-slate-800">{memberTasks.length}</span>
                   </div>
                   <div className="flex justify-between border-t border-slate-200/50 pt-1">
-                    <span className="text-slate-500 font-semibold">Productivity Velocity:</span>
-                    <span className="font-bold text-emerald-600">{m.velocity}</span>
+                    <span className="text-slate-500 font-semibold">Avg. EOD Productivity:</span>
+                    <span className="font-bold text-emerald-600">{velocity}</span>
                   </div>
                 </div>
               </div>
-            ))}
+            );})}
+            {activeTeamMembers.length === 0 && <p className="col-span-full rounded-xl border border-dashed p-6 text-center text-xs text-slate-500">Add active team members in Procurement Master Data to manage the roster.</p>}
           </div>
         </div>
       )}
@@ -533,12 +537,14 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
                   <label className="font-semibold text-slate-700 block mb-1">Assignee</label>
                   <select
                     value={newTask.assigned_to_name}
-                    onChange={e => setNewTask({ ...newTask, assigned_to_name: e.target.value })}
+                    onChange={e => {
+                      const member = activeTeamMembers.find(candidate => candidate.name === e.target.value);
+                      setNewTask({ ...newTask, assigned_to_name: e.target.value, assigned_to_email: member?.email || '' });
+                    }}
                     className="w-full p-2.5 border border-slate-200 rounded-xl bg-white"
                   >
-                    <option value="Deepika Nair">Deepika Nair</option>
-                    <option value="Suresh Menon">Suresh Menon</option>
-                    <option value="Kavita Joshi">Kavita Joshi</option>
+                    {newTask.assigned_to_name && !activeTeamMembers.some(member => member.name === newTask.assigned_to_name) && <option value={newTask.assigned_to_name}>{newTask.assigned_to_name} (inactive)</option>}
+                    {activeTeamMembers.map(member => <option key={member.id} value={member.name}>{member.name}</option>)}
                   </select>
                 </div>
 
@@ -634,9 +640,8 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
                     onChange={e => setNewEod({ ...newEod, employee_name: e.target.value })}
                     className="w-full p-2.5 border border-slate-200 rounded-xl bg-white"
                   >
-                    <option value="Deepika Nair">Deepika Nair</option>
-                    <option value="Suresh Menon">Suresh Menon</option>
-                    <option value="Kavita Joshi">Kavita Joshi</option>
+                    {newEod.employee_name && !activeTeamMembers.some(member => member.name === newEod.employee_name) && <option value={newEod.employee_name}>{newEod.employee_name} (inactive)</option>}
+                    {activeTeamMembers.map(member => <option key={member.id} value={member.name}>{member.name}</option>)}
                   </select>
                 </div>
 

@@ -60,6 +60,20 @@ export interface Vendor {
   rating_responsiveness?: number;
 }
 
+export interface ProcurementMasterOption {
+  id: string;
+  name: string;
+}
+
+export interface ProcurementTeamMember {
+  id: string;
+  name: string;
+  title: string;
+  email: string;
+  phone: string;
+  active: boolean;
+}
+
 // -------------------------------------------------------------
 // TENDER MANAGEMENT & LIFECYCLE
 // -------------------------------------------------------------
@@ -555,7 +569,7 @@ export interface StockItem {
   id: string;
   item_code: string;
   name: string;
-  category: StoreCategory;
+  category: string;
   unit: string;
   opening_stock: number;
   receipts: number;
@@ -1017,6 +1031,9 @@ export interface PrivateTender {
 export interface AppState {
   purchaseRequests: PurchaseRequest[];
   vendors: Vendor[];
+  procurementMasterCategories: ProcurementMasterOption[];
+  procurementMasterUnits: ProcurementMasterOption[];
+  procurementTeamMembers: ProcurementTeamMember[];
   invoices: Invoice[];
   expenses: Expense[];
   leads: Lead[];
