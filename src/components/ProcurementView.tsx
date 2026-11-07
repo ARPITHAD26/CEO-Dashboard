@@ -403,7 +403,7 @@ export default function ProcurementView({
       )}
 
       {/* Procurement Executive Header */}
-      <div className="bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 text-white p-6 rounded-3xl shadow-xl border border-slate-500/30 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="bg-gradient-to-r from-rose-100 via-pink-100 to-fuchsia-100 text-slate-900 p-6 rounded-3xl shadow-xl border border-pink-200 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
           {/* Procurement Head HD Photo Frame */}
           <div 
@@ -445,17 +445,17 @@ export default function ProcurementView({
 
           <div>
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-white border border-white/30 flex items-center gap-1">
-                <ShoppingBag className="w-3 h-3 text-slate-200" /> Procurement & Supply
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/70 text-slate-800 border border-pink-200 flex items-center gap-1">
+                <ShoppingBag className="w-3 h-3 text-pink-700" /> Procurement & Supply
               </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 flex items-center gap-1">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 Active Purchase Requests: {totalPRs}
               </span>
             </div>
-            <h1 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5 flex-wrap">
+            <h1 className="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5 flex-wrap">
               <span>Procurement Head</span>
-              <span className="text-xs sm:text-sm font-semibold text-slate-100 font-sans tracking-normal bg-white/10 px-2.5 py-1 rounded-lg border border-white/20">
+              <span className="text-xs sm:text-sm font-semibold text-slate-700 font-sans tracking-normal bg-white/60 px-2.5 py-1 rounded-lg border border-pink-200">
                 Supply Chain Control Tower
               </span>
             </h1>
@@ -465,15 +465,15 @@ export default function ProcurementView({
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => setActiveSubTab('requests')}
-            className="px-4 py-2 bg-white/15 hover:bg-white/25 border border-white/30 text-white text-xs font-bold rounded-2xl shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 bg-white/70 hover:bg-white border border-pink-200 text-slate-800 text-xs font-bold rounded-2xl shadow-sm transition flex items-center gap-1.5 cursor-pointer"
           >
-            <PlusCircle className="w-4 h-4 text-slate-200" /> New Indent / Request
+            <PlusCircle className="w-4 h-4 text-pink-700" /> New Indent / Request
           </button>
           <button
             onClick={() => setActiveSubTab('tenders')}
-            className="px-3.5 py-2 bg-white/15 hover:bg-white/25 text-white text-xs font-bold rounded-2xl border border-white/30 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+            className="px-3.5 py-2 bg-white/70 hover:bg-white text-slate-800 text-xs font-bold rounded-2xl border border-pink-200 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
           >
-            <Briefcase className="w-4 h-4 text-slate-200" /> Tender Lifecycle
+            <Briefcase className="w-4 h-4 text-pink-700" /> Tender Lifecycle
           </button>
         </div>
       </div>
