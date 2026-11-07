@@ -20,6 +20,7 @@ import TrainingView from './components/TrainingView';
 import ITView from './components/ITView';
 import AdminPanel from './components/AdminPanel';
 import { AIDocumentImportModal } from './components/AIDocumentImportModal';
+import OrganizationChat from './components/OrganizationChat';
 import { GovernmentTenderView } from './components/GovernmentTenderView';
 import { PrivateTenderView } from './components/PrivateTenderView';
 import {
@@ -919,6 +920,8 @@ export default function App() {
         onDataImported={handleDataImported}
         currentUserEmail={currentUser.email}
       />
+
+      <OrganizationChat currentUser={currentUser} />
 
     </div>
   );
