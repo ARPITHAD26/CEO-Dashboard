@@ -1,12 +1,14 @@
 import {
   addDoc,
   collection,
+  getDocs,
   limit,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -58,4 +60,17 @@ export async function sendChatMessage(message: Omit<ChatMessage, 'id' | 'created
     ...message,
     createdAt: serverTimestamp()
   });
+}
+
+export async function clearChatMessages() {
+  const snapshot = await getDocs(collection(db, CHAT_COLLECTION));
+  const documents = snapshot.docs;
+
+  for (let index = 0; index < documents.length; index += 500) {
+    const batch = writeBatch(db);
+    documents.slice(index, index + 500).forEach((messageDoc) => batch.delete(messageDoc.ref));
+    await batch.commit();
+  }
+
+  return documents.length;
 }

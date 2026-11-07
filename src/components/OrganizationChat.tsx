@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { AlertCircle, LoaderCircle, MessageCircle, Send, X } from 'lucide-react';
+import { AlertCircle, LoaderCircle, MessageCircle, Send, Trash2, X } from 'lucide-react';
 import { UserAccount } from '../types';
-import { ChatMessage, sendChatMessage, subscribeToChatMessages } from '../lib/chatService';
+import { ChatMessage, clearChatMessages, sendChatMessage, subscribeToChatMessages } from '../lib/chatService';
 
 interface OrganizationChatProps {
   currentUser: UserAccount;
@@ -13,7 +13,9 @@ export default function OrganizationChat({ currentUser }: OrganizationChatProps)
   const [draft, setDraft] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => subscribeToChatMessages(
@@ -35,7 +37,7 @@ export default function OrganizationChat({ currentUser }: OrganizationChatProps)
   const handleSend = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const text = draft.trim();
-    if (!text || isSending) return;
+    if (!text || isSending || isClearing) return;
 
     setIsSending(true);
     setError(null);
@@ -55,6 +57,26 @@ export default function OrganizationChat({ currentUser }: OrganizationChatProps)
     }
   };
 
+  const handleClearChat = async () => {
+    const confirmed = window.confirm(
+      'Clear all organization chat messages for everyone? This action cannot be undone.'
+    );
+    if (!confirmed || isClearing || isSending) return;
+
+    setIsClearing(true);
+    setError(null);
+    setStatus(null);
+    try {
+      const deletedCount = await clearChatMessages();
+      setStatus(deletedCount > 0 ? 'Chat cleared for everyone.' : 'There were no messages to clear.');
+    } catch (clearError) {
+      const details = clearError instanceof Error ? clearError.message : 'Unknown error';
+      setError(`Unable to clear chat messages: ${details}`);
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   return (
     <div className="fixed bottom-5 right-5 z-[60] font-sans">
       {isOpen && (
@@ -67,14 +89,29 @@ export default function OrganizationChat({ currentUser }: OrganizationChatProps)
               <h2 className="text-sm font-bold text-slate-100">Organization Chat</h2>
               <p className="text-[11px] text-slate-400">Messages shared with dashboard users</p>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              aria-label="Close organization chat"
-              className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handleClearChat}
+                disabled={isLoading || isSending || isClearing || messages.length === 0}
+                aria-label="Clear chat for everyone"
+                title="Clear chat for everyone"
+                className="flex items-center gap-1 rounded-lg px-2 py-2 text-[11px] font-medium text-rose-300 transition hover:bg-rose-500/10 hover:text-rose-200 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {isClearing
+                  ? <LoaderCircle className="h-4 w-4 animate-spin" />
+                  : <Trash2 className="h-4 w-4" />}
+                <span>Clear</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                aria-label="Close organization chat"
+                className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </header>
 
           <div className="flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite">
@@ -124,6 +161,12 @@ export default function OrganizationChat({ currentUser }: OrganizationChatProps)
             </div>
           )}
 
+          {status && (
+            <p role="status" className="mx-3 mb-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2 text-[11px] text-emerald-300">
+              {status}
+            </p>
+          )}
+
           <form onSubmit={handleSend} className="flex items-end gap-2 border-t border-slate-800 p-3">
             <textarea
               value={draft}
@@ -136,7 +179,7 @@ export default function OrganizationChat({ currentUser }: OrganizationChatProps)
             />
             <button
               type="submit"
-              disabled={!draft.trim() || isSending}
+              disabled={!draft.trim() || isSending || isClearing}
               aria-label="Send message"
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
             >
