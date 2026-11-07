@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { DailyProcurementTask, EodReviewRecord, AppState, Role } from '../types';
 import { 
   CheckSquare, Clock, Plus, Search, Filter, AlertTriangle, CheckCircle2, 
@@ -21,6 +21,7 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
   onUpdateState
 }) => {
   const [activeTab, setActiveTab] = useState<'tasks' | 'eod' | 'team'>('tasks');
+  const [activeDashboardMemberName, setActiveDashboardMemberName] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [assigneeFilter, setAssigneeFilter] = useState<string>('ALL');
@@ -28,8 +29,14 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
   // Modals
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [showEodModal, setShowEodModal] = useState(false);
-  const activeTeamMembers = (state.procurementTeamMembers || []).filter(member => member.active);
+  const activeTeamMembers = useMemo(
+    () => (state.procurementTeamMembers || []).filter(member => member.active),
+    [state.procurementTeamMembers]
+  );
   const defaultAssignee = activeTeamMembers[0];
+  const [selectedAssigneeNames, setSelectedAssigneeNames] = useState<string[]>(
+    () => activeTeamMembers.map(member => member.name)
+  );
 
   // New Task Form State
   const [newTask, setNewTask] = useState<Partial<DailyProcurementTask>>({
@@ -58,9 +65,36 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
     productivity_score: 85
   });
 
+  useEffect(() => {
+    if (activeTeamMembers.length === 0) return;
+    setSelectedAssigneeNames(activeTeamMembers.map(member => member.name));
+    setNewTask(current => {
+      if (activeTeamMembers.some(member => member.name === current.assigned_to_name)) return current;
+      const assignee = activeTeamMembers[0];
+      return { ...current, assigned_to_name: assignee.name, assigned_to_email: assignee.email || '' };
+    });
+    setNewEod(current => {
+      if (activeTeamMembers.some(member => member.name === current.employee_name)) return current;
+      return { ...current, employee_name: activeTeamMembers[0].name };
+    });
+  }, [activeTeamMembers]);
+
+  const dashboardTasks = useMemo(
+    () => (state.dailyProcurementTasks || []).filter(task =>
+      !activeDashboardMemberName || task.assigned_to_name === activeDashboardMemberName
+    ),
+    [state.dailyProcurementTasks, activeDashboardMemberName]
+  );
+  const dashboardReviews = useMemo(
+    () => (state.eodReviews || []).filter(review =>
+      !activeDashboardMemberName || review.employee_name === activeDashboardMemberName
+    ),
+    [state.eodReviews, activeDashboardMemberName]
+  );
+
   // Filtered Tasks
   const filteredTasks = useMemo(() => {
-    return (state.dailyProcurementTasks || []).filter(task => {
+    return dashboardTasks.filter(task => {
       const matchesSearch = 
         task.task_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         task.task_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -70,7 +104,7 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
       const matchesAssignee = assigneeFilter === 'ALL' || task.assigned_to_name === assigneeFilter;
       return matchesSearch && matchesStatus && matchesAssignee;
     });
-  }, [state.dailyProcurementTasks, searchTerm, statusFilter, assigneeFilter]);
+  }, [dashboardTasks, searchTerm, statusFilter, assigneeFilter]);
 
   // Unique Assignees
   const assignees = useMemo(() => {
@@ -79,34 +113,38 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
   }, [state.dailyProcurementTasks]);
   // Save Task
   const handleSaveTask = () => {
-    if (!newTask.task_title || !newTask.assigned_to_name) {
-      alert('Please provide a task title and select an active assignee from Procurement Master Data.');
+    const assignees = activeTeamMembers.filter(member => selectedAssigneeNames.includes(member.name));
+    if (!newTask.task_title?.trim() || assignees.length === 0) {
+      alert('Please provide a task title and select at least one active assignee.');
       return;
     }
 
-    const taskCode = `TSK-${new Date().toISOString().slice(5, 10).replace('-', '')}-${String((state.dailyProcurementTasks || []).length + 1).padStart(3, '0')}`;
-    const created: DailyProcurementTask = {
-      id: `DPT-${Date.now().toString().slice(-6)}`,
-      task_code: taskCode,
-      date: new Date().toISOString().split('T')[0],
-      assigned_to_name: newTask.assigned_to_name,
-      assigned_to_email: newTask.assigned_to_email || undefined,
-      task_title: newTask.task_title!,
+    const createdAt = new Date();
+    const taskDate = createdAt.toISOString().split('T')[0];
+    const taskCodePrefix = `TSK-${createdAt.toISOString().slice(5, 10).replace('-', '')}`;
+    const taskNumber = (state.dailyProcurementTasks || []).length + 1;
+    const createdTasks: DailyProcurementTask[] = assignees.map((assignee, index) => ({
+      id: `DPT-${createdAt.getTime()}-${index + 1}`,
+      task_code: `${taskCodePrefix}-${String(taskNumber + index).padStart(3, '0')}`,
+      date: taskDate,
+      assigned_to_name: assignee.name,
+      assigned_to_email: assignee.email || undefined,
+      task_title: newTask.task_title!.trim(),
       priority: newTask.priority || 'High',
       related_to: newTask.related_to || 'Tender',
       related_ref_id: newTask.related_ref_id || 'GENERAL',
-      due_date: newTask.due_date || new Date().toISOString().split('T')[0],
+      due_date: newTask.due_date || taskDate,
       expected_output: newTask.expected_output || 'Task output delivered on schedule',
       status: newTask.status || 'Pending',
-      created_at: new Date().toISOString()
-    };
+      created_at: createdAt.toISOString()
+    }));
 
     onUpdateState(prev => ({
       ...prev,
-      dailyProcurementTasks: [created, ...(prev.dailyProcurementTasks || [])]
+      dailyProcurementTasks: [...createdTasks, ...(prev.dailyProcurementTasks || [])]
     }));
 
-    saveEntityToFirestore('dailyProcurementTasks', created.id, created);
+    createdTasks.forEach(task => saveEntityToFirestore('dailyProcurementTasks', task.id, task));
     setShowAddTaskModal(false);
   };
 
@@ -153,10 +191,14 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
   };
 
   // Metrics
-  const totalTasks = state.dailyProcurementTasks?.length || 0;
-  const completedCount = (state.dailyProcurementTasks || []).filter(t => t.status === 'Completed').length;
-  const delayedCount = (state.dailyProcurementTasks || []).filter(t => t.status === 'Delayed').length;
+  const totalTasks = dashboardTasks.length;
+  const completedCount = dashboardTasks.filter(t => t.status === 'Completed').length;
+  const delayedCount = dashboardTasks.filter(t => t.status === 'Delayed').length;
   const completionRate = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 100;
+  const averageProductivity = dashboardReviews.length
+    ? Math.round(dashboardReviews.reduce((sum, review) => sum + review.productivity_score, 0) / dashboardReviews.length)
+    : null;
+  const dashboardMember = activeTeamMembers.find(member => member.name === activeDashboardMemberName);
 
   return (
     <div id="procurement-tasks-root" className="space-y-6">
@@ -169,7 +211,9 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
             </span>
             <span className="text-xs text-teal-200/80">Total Tasks: {totalTasks}</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Procurement Team Task & EOD Monitoring</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {dashboardMember ? `${dashboardMember.name}'s Procurement Dashboard` : 'Procurement Team Task & EOD Monitoring'}
+          </h1>
           <p className="text-teal-100/80 text-sm mt-1 max-w-2xl">
             Daily task allocation, critical milestones tracking, end-of-day (EOD) productivity reviews, and delay accountability register.
           </p>
@@ -178,19 +222,70 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             id="btn-add-task"
-            onClick={() => setShowAddTaskModal(true)}
+            onClick={() => {
+              const assignee = activeTeamMembers.find(member => member.name === newTask.assigned_to_name) || activeTeamMembers[0];
+              if (!assignee) {
+                alert('Add an active assignee in Procurement Master Data before allocating a task.');
+                return;
+              }
+              setSelectedAssigneeNames(
+                activeDashboardMemberName
+                  ? [activeDashboardMemberName]
+                  : activeTeamMembers.map(member => member.name)
+              );
+              setNewTask(current => ({ ...current, assigned_to_name: assignee.name, assigned_to_email: assignee.email || '' }));
+              setShowAddTaskModal(true);
+            }}
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-xl shadow transition flex items-center gap-2"
           >
             <Plus className="w-4 h-4" /> Allocate Daily Task
           </button>
           <button
             id="btn-add-eod"
-            onClick={() => setShowEodModal(true)}
+            onClick={() => {
+              if (activeDashboardMemberName) {
+                setNewEod(current => ({ ...current, employee_name: activeDashboardMemberName }));
+              }
+              setShowEodModal(true);
+            }}
             className="px-3.5 py-2 bg-teal-800/80 hover:bg-teal-700 text-teal-100 text-sm font-medium rounded-xl border border-teal-600/40 transition flex items-center gap-2"
           >
             <Award className="w-4 h-4 text-cyan-300" /> Submit EOD Review
           </button>
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2" aria-label="Procurement dashboards">
+        <button
+          onClick={() => {
+            setActiveDashboardMemberName(null);
+            setAssigneeFilter('ALL');
+          }}
+          className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${
+            !activeDashboardMemberName
+              ? 'border-cyan-700 bg-cyan-700 text-white shadow'
+              : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+          }`}
+        >
+          Team Overview
+        </button>
+        {activeTeamMembers.map(member => (
+          <button
+            key={member.id}
+            onClick={() => {
+              setActiveDashboardMemberName(member.name);
+              setAssigneeFilter('ALL');
+            }}
+            className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition ${
+              activeDashboardMemberName === member.name
+                ? 'border-cyan-700 bg-cyan-700 text-white shadow'
+                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            <User className="h-4 w-4" />
+            {member.name}
+          </button>
+        ))}
       </div>
 
       {/* KPI Cards Row */}
@@ -208,7 +303,9 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
           <span className="text-2xl font-bold text-slate-900 mt-1 block">
             {totalTasks - completedCount} Tasks
           </span>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">In flight across team</span>
+          <span className="text-[11px] text-slate-400 mt-0.5 block">
+            {dashboardMember ? `Assigned to ${dashboardMember.name}` : 'In flight across team'}
+          </span>
         </div>
 
         <div className={`p-4 rounded-2xl border shadow-sm ${
@@ -225,19 +322,23 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <span className="text-xs text-slate-500 font-medium block">Avg Team Productivity</span>
-          <span className="text-2xl font-bold text-slate-900 mt-1 block">
-            88 / 100
+          <span className="text-xs text-slate-500 font-medium block">
+            {dashboardMember ? 'Personal Avg. Productivity' : 'Avg Team Productivity'}
           </span>
-          <span className="text-[11px] text-emerald-600 mt-0.5 block">High Operational Velocity</span>
+          <span className="text-2xl font-bold text-slate-900 mt-1 block">
+            {averageProductivity === null ? '—' : `${averageProductivity} / 100`}
+          </span>
+          <span className="text-[11px] text-emerald-600 mt-0.5 block">
+            {dashboardReviews.length ? `${dashboardReviews.length} EOD review${dashboardReviews.length === 1 ? '' : 's'}` : 'No EOD reviews yet'}
+          </span>
         </div>
       </div>
 
       {/* Navigation Sub-Tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
         {[
-          { id: 'tasks', label: 'Daily Task Board', icon: CheckSquare, count: (state.dailyProcurementTasks || []).length },
-          { id: 'eod', label: 'EOD Productivity Reports', icon: Award, count: (state.eodReviews || []).length },
+          { id: 'tasks', label: 'Daily Task Board', icon: CheckSquare, count: dashboardTasks.length },
+          { id: 'eod', label: 'EOD Productivity Reports', icon: Award, count: dashboardReviews.length },
           { id: 'team', label: 'Team Velocity & Roster', icon: User, count: assignees.length }
         ].map(tab => {
           const Icon = tab.icon;
@@ -298,6 +399,7 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
               <select
                 value={assigneeFilter}
                 onChange={e => setAssigneeFilter(e.target.value)}
+                hidden={!!activeDashboardMemberName}
                 className="px-3 py-2 rounded-lg border border-slate-200 text-xs font-medium bg-slate-50 focus:outline-none"
               >
                 <option value="ALL">All Assignees</option>
@@ -379,6 +481,11 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
                 </div>
               );
             })}
+            {filteredTasks.length === 0 && (
+              <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
+                No tasks {dashboardMember ? `assigned to ${dashboardMember.name}` : 'match the selected filters'}.
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -394,7 +501,12 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
               </p>
             </div>
             <button
-              onClick={() => setShowEodModal(true)}
+              onClick={() => {
+                if (activeDashboardMemberName) {
+                  setNewEod(current => ({ ...current, employee_name: activeDashboardMemberName }));
+                }
+                setShowEodModal(true);
+              }}
               className="px-4 py-2 bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-semibold rounded-xl transition flex items-center gap-2"
             >
               <Plus className="w-3.5 h-3.5" /> Submit EOD Report
@@ -402,7 +514,7 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(state.eodReviews || []).map(eod => (
+            {dashboardReviews.map(eod => (
               <div key={eod.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -455,6 +567,11 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
                 </div>
               </div>
             ))}
+            {dashboardReviews.length === 0 && (
+              <p className="col-span-full rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
+                No EOD reports {dashboardMember ? `for ${dashboardMember.name}` : 'have been submitted'} yet.
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -502,8 +619,18 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
                     <span className="font-bold text-emerald-600">{velocity}</span>
                   </div>
                 </div>
+                <button
+                  onClick={() => {
+                    setActiveDashboardMemberName(member.name);
+                    setActiveTab('tasks');
+                    setAssigneeFilter('ALL');
+                  }}
+                  className="w-full rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-800 hover:bg-cyan-100"
+                >
+                  Open {member.name.split(' ')[0]}'s Dashboard
+                </button>
               </div>
-            );})}
+              );})}
             {activeTeamMembers.length === 0 && <p className="col-span-full rounded-xl border border-dashed p-6 text-center text-xs text-slate-500">Add active team members in Procurement Master Data to manage the roster.</p>}
           </div>
         </div>
@@ -534,18 +661,28 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1">Assignee</label>
-                  <select
-                    value={newTask.assigned_to_name}
-                    onChange={e => {
-                      const member = activeTeamMembers.find(candidate => candidate.name === e.target.value);
-                      setNewTask({ ...newTask, assigned_to_name: e.target.value, assigned_to_email: member?.email || '' });
-                    }}
-                    className="w-full p-2.5 border border-slate-200 rounded-xl bg-white"
-                  >
-                    {newTask.assigned_to_name && !activeTeamMembers.some(member => member.name === newTask.assigned_to_name) && <option value={newTask.assigned_to_name}>{newTask.assigned_to_name} (inactive)</option>}
-                    {activeTeamMembers.map(member => <option key={member.id} value={member.name}>{member.name}</option>)}
-                  </select>
+                  <label className="font-semibold text-slate-700 block mb-1">Assignees</label>
+                  <div className="max-h-32 space-y-2 overflow-y-auto rounded-xl border border-slate-200 p-2.5">
+                    {activeTeamMembers.map(member => (
+                      <label key={member.id} className="flex items-center gap-2 font-medium text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={selectedAssigneeNames.includes(member.name)}
+                          onChange={event => setSelectedAssigneeNames(current => (
+                            event.target.checked
+                              ? [...current, member.name]
+                              : current.filter(name => name !== member.name)
+                          ))}
+                          className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                        />
+                        {member.name}
+                      </label>
+                    ))}
+                    {activeTeamMembers.length === 0 && (
+                      <p className="text-slate-500">Add active team members in Procurement Master Data first.</p>
+                    )}
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-500">A separate task will be created for each selected person.</p>
                 </div>
 
                 <div>
@@ -611,9 +748,10 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
               </button>
               <button
                 onClick={handleSaveTask}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow"
+                disabled={selectedAssigneeNames.length === 0 || activeTeamMembers.length === 0}
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow"
               >
-                Assign Task
+                Assign to {selectedAssigneeNames.length} {selectedAssigneeNames.length === 1 ? 'Person' : 'People'}
               </button>
             </div>
           </div>
