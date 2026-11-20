@@ -9,6 +9,8 @@ import {
   CheckCircle, ChevronRight, Lock, Network, AlertCircle, Edit3, Trash2
 } from 'lucide-react';
 import { saveEntityToFirestore, deleteEntityFromFirestore } from '../lib/firebaseService';
+import ITPortfolioManagement, { ITManagementSection } from './ITPortfolioManagement';
+import ITApplicationHealthPanel from './ITApplicationHealthPanel';
 
 interface ITViewProps {
   state: AppState;
@@ -18,6 +20,10 @@ interface ITViewProps {
   subRoleName?: string;
 }
 
+const ticketStatusOptions: ITTicket['status'][] = [
+  'Open', 'Assigned', 'In Progress', 'Awaiting User', 'Awaiting Vendor', 'Resolved', 'Closed'
+];
+
 export default function ITView({ 
   state, 
   onUpdateState, 
@@ -25,11 +31,19 @@ export default function ITView({
   allowedSubViews,
   subRoleName 
 }: ITViewProps) {
-  const allTabs: { id: 'applications' | 'servers' | 'tickets' | 'security'; label: string; icon: any }[] = [
-    { id: 'applications', label: 'IT Applications', icon: Layers },
-    { id: 'servers', label: 'Hostinger VPS & Nodes', icon: Server },
-    { id: 'tickets', label: 'IT Helpdesk & Tickets', icon: Ticket },
-    { id: 'security', label: 'Security & SSL', icon: Lock }
+  type ITTab = ITManagementSection | 'applications' | 'servers' | 'tickets' | 'security';
+  const managementSections: ITManagementSection[] = ['portfolio', 'delivery', 'bottlenecks', 'vendors', 'weekly'];
+  const allTabs: { id: ITTab; label: string; icon: any }[] = [
+    { id: 'overview', label: 'Health Overview', icon: Activity },
+    { id: 'portfolio', label: 'Project Portfolio', icon: Layers },
+    { id: 'delivery', label: 'Milestones & Delivery', icon: CheckCircle2 },
+    { id: 'bottlenecks', label: 'Risks & Decisions', icon: AlertTriangle },
+    { id: 'vendors', label: 'Vendor Commitments', icon: Network },
+    { id: 'weekly', label: 'Weekly Review', icon: Clock },
+    { id: 'applications', label: 'Applications', icon: Layers },
+    { id: 'servers', label: 'Infrastructure', icon: Server },
+    { id: 'tickets', label: 'Support Desk', icon: Ticket },
+    { id: 'security', label: 'Security Controls', icon: Lock }
   ];
 
   const availableTabs = allowedSubViews && allowedSubViews.length > 0
@@ -38,7 +52,7 @@ export default function ITView({
 
   const defaultTab = availableTabs.length > 0 ? availableTabs[0].id : 'applications';
 
-  const [activeTab, setActiveTab] = useState<'applications' | 'servers' | 'tickets' | 'security'>(defaultTab);
+  const [activeTab, setActiveTab] = useState<ITTab>(defaultTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -64,12 +78,16 @@ export default function ITView({
   const [ticketModalOpen, setTicketModalOpen] = useState(false);
   const [ticketFormData, setTicketFormData] = useState<Partial<ITTicket>>({
     subject: '',
+    description: '',
     requested_by: '',
     department: 'Operations',
     priority: 'Medium',
     category: 'Software Access',
     status: 'Open',
-    resolution_notes: ''
+    resolution_notes: '',
+    assigned_to: '',
+    target_resolution_at: '',
+    linked_project_id: ''
   });
 
   const [serverModalOpen, setServerModalOpen] = useState(false);
@@ -88,6 +106,11 @@ export default function ITView({
   const serverNodes = state.itServerNodes || [];
   const tickets = state.itTickets || [];
   const securityChecks = state.itSecurityChecks || [];
+  const projects = state.itProjects || [];
+  const projectTasks = state.itTasks || [];
+  const bottlenecks = state.itBottlenecks || [];
+  const vendorCommitments = state.itVendorCommitments || [];
+  const weeklyReports = state.itWeeklyReports || [];
 
   // Summary Metrics
   const operationalApps = applications.filter(a => a.status === 'Operational').length;
@@ -101,9 +124,10 @@ export default function ITView({
     ? Math.round(applications.reduce((acc, a) => acc + (a.latency_ms || 30), 0) / totalApps)
     : 0;
 
+  const activeTickets = tickets.filter(t => !['Resolved', 'Closed'].includes(t.status));
   const openTickets = tickets.filter(t => t.status === 'Open').length;
-  const inProgressTickets = tickets.filter(t => t.status === 'In Progress').length;
-  const criticalTickets = tickets.filter(t => t.priority === 'Critical' && t.status !== 'Resolved').length;
+  const inProgressTickets = tickets.filter(t => t.status === 'In Progress' || t.status === 'Assigned').length;
+  const criticalTickets = activeTickets.filter(t => t.priority === 'Critical').length;
 
   const passedSecurity = securityChecks.filter(s => s.status === 'Pass').length;
 
@@ -119,13 +143,13 @@ export default function ITView({
     });
   }, [applications, searchQuery, statusFilter, categoryFilter]);
 
-  // Run automated system diagnostic ping test
+  // This refreshes the management summary from saved monitoring data. It does not perform a network probe.
   const handleRunDiagnostic = () => {
     setIsDiagnosticRunning(true);
     setDiagnosticResult(null);
     setTimeout(() => {
       setIsDiagnosticRunning(false);
-      setDiagnosticResult(`All ${totalApps} corporate applications & ${serverNodes.length} Hostinger VPS nodes inspected. Gateway response latency average: ${avgLatency}ms. VPS Uptime nominal at ${avgUptime}%.`);
+      setDiagnosticResult(`Health summary refreshed from ${totalApps} application and ${serverNodes.length} infrastructure records. Average response: ${avgLatency}ms; recorded application uptime: ${avgUptime}%.`);
       setTimeout(() => setDiagnosticResult(null), 8000);
     }, 1200);
   };
@@ -190,18 +214,26 @@ export default function ITView({
     e.preventDefault();
     if (!ticketFormData.subject) return;
 
-    const ticketNo = `IT-2026-${Math.floor(100 + Math.random() * 900)}`;
+    const now = new Date().toISOString();
+    const linkedProject = projects.find(project => project.id === ticketFormData.linked_project_id);
+    const ticketNo = `IT-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
     const newTicket: ITTicket = {
       id: `TCK-${Date.now().toString().slice(-4)}`,
       ticket_no: ticketNo,
       subject: ticketFormData.subject || '',
+      description: ticketFormData.description?.trim() || undefined,
       requested_by: ticketFormData.requested_by || currentUserEmail || 'Staff User',
       department: ticketFormData.department || 'Operations',
       priority: ticketFormData.priority as any || 'Medium',
       category: ticketFormData.category as any || 'Software Access',
       status: 'Open',
-      created_at: new Date().toISOString(),
-      resolution_notes: ticketFormData.resolution_notes || ''
+      created_at: now,
+      resolution_notes: ticketFormData.resolution_notes || '',
+      assigned_to: ticketFormData.assigned_to?.trim() || undefined,
+      target_resolution_at: ticketFormData.target_resolution_at || undefined,
+      linked_project_id: linkedProject?.id,
+      linked_project_name: linkedProject?.name,
+      updated_at: now
     };
 
     onUpdateState({
@@ -213,23 +245,28 @@ export default function ITView({
     setTicketModalOpen(false);
     setTicketFormData({
       subject: '',
+      description: '',
       requested_by: '',
       department: 'Operations',
       priority: 'Medium',
       category: 'Software Access',
       status: 'Open',
-      resolution_notes: ''
+      resolution_notes: '',
+      assigned_to: '',
+      target_resolution_at: '',
+      linked_project_id: ''
     });
   };
 
   // Update Ticket Status
-  const handleUpdateTicketStatus = async (ticketId: string, newStatus: 'Open' | 'In Progress' | 'Resolved') => {
+  const handleUpdateTicketStatus = async (ticketId: string, newStatus: ITTicket['status']) => {
     const updatedTickets = tickets.map(t => {
       if (t.id === ticketId) {
         return {
           ...t,
           status: newStatus,
-          resolved_at: newStatus === 'Resolved' ? new Date().toISOString() : t.resolved_at
+          resolved_at: ['Resolved', 'Closed'].includes(newStatus) ? new Date().toISOString() : undefined,
+          updated_at: new Date().toISOString()
         };
       }
       return t;
@@ -330,8 +367,21 @@ export default function ITView({
     }
   };
 
+  const getTicketStatusBadge = (status: ITTicket['status']) => {
+    const styles: Record<ITTicket['status'], string> = {
+      'Open': 'bg-slate-100 text-slate-700 border-slate-300',
+      'Assigned': 'bg-cyan-100 text-cyan-700 border-cyan-300',
+      'In Progress': 'bg-cyan-100 text-cyan-700 border-cyan-300',
+      'Awaiting User': 'bg-amber-100 text-amber-700 border-amber-300',
+      'Awaiting Vendor': 'bg-amber-100 text-amber-700 border-amber-300',
+      'Resolved': 'bg-emerald-100 text-emerald-700 border-emerald-300',
+      'Closed': 'bg-emerald-100 text-emerald-700 border-emerald-300'
+    };
+    return <span className={`px-2 py-0.5 text-[10px] font-bold rounded border ${styles[status]}`}>{status}</span>;
+  };
+
   return (
-    <div className="space-y-6 pb-12 bg-white text-slate-800">
+    <div className="it-health-workspace space-y-6 pb-12 text-slate-800">
       {/* Top Banner with Diagnostics & KPIs */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 relative overflow-hidden shadow-lg">
         <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -343,14 +393,14 @@ export default function ITView({
                 <Server className="w-5 h-5" />
               </div>
               <h1 className="text-xl font-bold text-slate-800 tracking-tight">
-                IT Infrastructure &amp; Application Health
+                IT &amp; Application Health Panel
               </h1>
               <span className="px-2.5 py-0.5 text-[11px] font-mono font-bold rounded-full bg-cyan-50 text-cyan-600 border border-cyan-300">
-                Hostinger VPS + MongoDB
+                Operational monitoring
               </span>
             </div>
             <p className="text-xs text-slate-500 max-w-2xl">
-              Live observability for corporate applications, Hostinger VPS cluster node telemetry, field biometric endpoints, and IT support ticketing.
+              Live operational visibility across applications, infrastructure, support and security, with delivery governance available in dedicated drill-down tabs.
             </p>
           </div>
 
@@ -361,22 +411,14 @@ export default function ITView({
               className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition duration-150 flex items-center gap-2 shadow-sm disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-cyan-600 ${isDiagnosticRunning ? 'animate-spin' : ''}`} />
-              <span>{isDiagnosticRunning ? 'Running Ping Test...' : 'Run Diagnostics'}</span>
+              <span>{isDiagnosticRunning ? 'Refreshing Summary...' : 'Refresh Health Summary'}</span>
             </button>
-            <button
+            {activeTab === 'applications' && <button
               onClick={() => {
                 setEditingApp(null);
                 setAppFormData({
-                  name: '',
-                  category: 'Web App',
-                  url: '',
-                  host_type: 'Hostinger VPS',
-                  status: 'Operational',
-                  uptime_pct: 99.9,
-                  latency_ms: 35,
-                  version: 'v1.0.0',
-                  owner: 'IT Operations',
-                  description: ''
+                  name: '', category: 'Web App', url: '', host_type: 'Hostinger VPS', status: 'Operational', uptime_pct: 99.9,
+                  latency_ms: 35, version: 'v1.0.0', owner: 'IT Operations', description: ''
                 });
                 setAppModalOpen(true);
               }}
@@ -384,7 +426,7 @@ export default function ITView({
             >
               <Plus className="w-4 h-4" />
               <span>Register Application</span>
-            </button>
+            </button>}
           </div>
         </div>
 
@@ -430,14 +472,14 @@ export default function ITView({
               <Ticket className="w-4 h-4 text-amber-500" />
             </div>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-2xl font-bold font-mono text-amber-600">{openTickets + inProgressTickets}</span>
+              <span className="text-2xl font-bold font-mono text-amber-600">{activeTickets.length}</span>
               {criticalTickets > 0 && (
                 <span className="text-xs text-rose-600 font-bold font-mono bg-rose-100 px-1.5 py-0.5 rounded">
                   {criticalTickets} Critical
                 </span>
               )}
             </div>
-            <p className="text-[10px] text-slate-400 mt-1">{openTickets} Open · {inProgressTickets} In Progress</p>
+            <p className="text-[10px] text-slate-400 mt-1">{openTickets} Open · {inProgressTickets} Assigned / In Progress</p>
           </div>
 
           <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl">
@@ -473,12 +515,19 @@ export default function ITView({
       )}
 
       {/* Tabs Navigation */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="space-y-3">
+        <div className="rounded-2xl border border-slate-200 bg-white/90 p-1.5 shadow-sm backdrop-blur-sm">
+          <div className="grid grid-cols-2 gap-1.5 lg:grid-cols-5">
           {availableTabs.map(tab => {
             const IconComp = tab.icon;
             let badgeCount = null;
-            if (tab.id === 'applications') badgeCount = applications.length;
+            if (tab.id === 'overview') badgeCount = null;
+            else if (tab.id === 'portfolio') badgeCount = projects.length;
+            else if (tab.id === 'delivery') badgeCount = projectTasks.length;
+            else if (tab.id === 'bottlenecks') badgeCount = bottlenecks.filter(item => item.status !== 'Resolved' && item.status !== 'Closed').length;
+            else if (tab.id === 'vendors') badgeCount = vendorCommitments.length;
+            else if (tab.id === 'weekly') badgeCount = weeklyReports.length;
+            else if (tab.id === 'applications') badgeCount = applications.length;
             else if (tab.id === 'servers') badgeCount = serverNodes.length;
             else if (tab.id === 'tickets') badgeCount = tickets.length;
             else if (tab.id === 'security') badgeCount = securityChecks.length;
@@ -487,19 +536,23 @@ export default function ITView({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold transition duration-150 flex items-center gap-2 cursor-pointer ${
+                aria-current={activeTab === tab.id ? 'page' : undefined}
+                className={`min-w-0 rounded-xl border px-3 py-2.5 text-left text-xs font-semibold transition duration-150 flex items-center gap-2 cursor-pointer ${
                   activeTab === tab.id
-                    ? 'bg-cyan-50 border border-cyan-300 text-cyan-700 font-bold shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                    ? 'bg-cyan-50 border-cyan-300 text-cyan-700 font-bold shadow-sm'
+                    : 'border-transparent text-slate-500 hover:border-slate-200 hover:text-slate-700 hover:bg-slate-50'
                 }`}
               >
-                <IconComp className="w-3.5 h-3.5" />
-                <span>{tab.label} ({badgeCount})</span>
+                <IconComp className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{tab.label}</span>
+                {badgeCount !== null && <span className={`ml-auto shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-mono ${activeTab === tab.id ? 'bg-cyan-100 text-cyan-700' : 'bg-slate-100 text-slate-500'}`}>{badgeCount}</span>}
               </button>
             );
           })}
+          </div>
         </div>
 
+        {(activeTab === 'tickets' || activeTab === 'servers') && <div className="flex justify-end">
         {activeTab === 'tickets' && (
           <button
             onClick={() => setTicketModalOpen(true)}
@@ -519,7 +572,27 @@ export default function ITView({
             <span>Add Server Node</span>
           </button>
         )}
+        </div>}
       </div>
+
+      {activeTab === 'overview' && (
+        <ITApplicationHealthPanel
+          state={state}
+          onNavigate={(tab) => {
+            const target = tab as ITTab;
+            if (availableTabs.some(item => item.id === target)) setActiveTab(target);
+          }}
+        />
+      )}
+
+      {managementSections.includes(activeTab as ITManagementSection) && (
+        <ITPortfolioManagement
+          activeSection={activeTab as ITManagementSection}
+          state={state}
+          onUpdateState={onUpdateState}
+          currentUserEmail={currentUserEmail}
+        />
+      )}
 
       {/* TAB 1: IT APPLICATIONS */}
       {activeTab === 'applications' && (
@@ -787,6 +860,7 @@ export default function ITView({
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600">
                         {t.category}
                       </span>
+                      {getTicketStatusBadge(t.status)}
                       <span className="text-[10px] font-mono text-slate-400">
                         {new Date(t.created_at).toLocaleDateString()}
                       </span>
@@ -796,6 +870,8 @@ export default function ITView({
                     
                     <div className="flex items-center gap-4 text-xs text-slate-500">
                       <span>Requested by: <strong className="text-slate-600 font-normal">{t.requested_by}</strong> ({t.department})</span>
+                      {t.assigned_to && <span>Assigned: <strong className="text-slate-600 font-normal">{t.assigned_to}</strong></span>}
+                      {t.target_resolution_at && <span className={new Date(t.target_resolution_at).getTime() < Date.now() && !['Resolved', 'Closed'].includes(t.status) ? 'font-semibold text-rose-600' : ''}>Target: {new Date(t.target_resolution_at).toLocaleString()}</span>}
                       {t.resolution_notes && (
                         <span className="text-slate-400 italic truncate max-w-md">
                           Note: {t.resolution_notes}
@@ -805,32 +881,15 @@ export default function ITView({
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-1">
-                      <button
-                        onClick={() => handleUpdateTicketStatus(t.id, 'Open')}
-                        className={`px-2.5 py-1 rounded text-xs font-mono transition ${
-                          t.status === 'Open' ? 'bg-amber-500 text-white font-bold' : 'text-slate-500 hover:text-slate-700'
-                        }`}
-                      >
-                        Open
-                      </button>
-                      <button
-                        onClick={() => handleUpdateTicketStatus(t.id, 'In Progress')}
-                        className={`px-2.5 py-1 rounded text-xs font-mono transition ${
-                          t.status === 'In Progress' ? 'bg-cyan-500 text-white font-bold' : 'text-slate-500 hover:text-slate-700'
-                        }`}
-                      >
-                        In Progress
-                      </button>
-                      <button
-                        onClick={() => handleUpdateTicketStatus(t.id, 'Resolved')}
-                        className={`px-2.5 py-1 rounded text-xs font-mono transition ${
-                          t.status === 'Resolved' ? 'bg-emerald-500 text-white font-bold' : 'text-slate-500 hover:text-slate-700'
-                        }`}
-                      >
-                        Resolved
-                      </button>
-                    </div>
+                    <label className="sr-only" htmlFor={`ticket-status-${t.id}`}>Update ticket status</label>
+                    <select
+                      id={`ticket-status-${t.id}`}
+                      value={t.status}
+                      onChange={(event) => handleUpdateTicketStatus(t.id, event.target.value as ITTicket['status'])}
+                      className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:border-cyan-500 focus:outline-none"
+                    >
+                      {ticketStatusOptions.map(status => <option key={status} value={status}>{status}</option>)}
+                    </select>
                   </div>
                 </div>
               ))}
@@ -1046,6 +1105,17 @@ export default function ITView({
                 />
               </div>
 
+              <div>
+                <label className="text-[11px] font-mono text-slate-500 block mb-1">Issue Description</label>
+                <textarea
+                  rows={2}
+                  placeholder="What is affected, and what action or support is needed?"
+                  value={ticketFormData.description || ''}
+                  onChange={(e) => setTicketFormData({ ...ticketFormData, description: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-mono text-slate-500 block mb-1">Priority</label>
@@ -1073,6 +1143,49 @@ export default function ITView({
                     <option value="Network / VPN">Network / VPN</option>
                     <option value="Biometric Device">Biometric Device</option>
                     <option value="Email & Security">Email & Security</option>
+                    <option value="Hardware issues">Hardware issues</option>
+                    <option value="Software/application issues">Software/application issues</option>
+                    <option value="Network and connectivity">Network and connectivity</option>
+                    <option value="User access and permissions">User access and permissions</option>
+                    <option value="HRMS support">HRMS support</option>
+                    <option value="OpsVision support">OpsVision support</option>
+                    <option value="VAMS support">VAMS support</option>
+                    <option value="Vendor-dependent technical issues">Vendor-dependent technical issues</option>
+                    <option value="IT security incidents">IT security incidents</option>
+                    <option value="Other IT-related issues">Other IT-related issues</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-[11px] font-mono text-slate-500 block mb-1">Assigned IT Person</label>
+                  <input
+                    type="text"
+                    placeholder="Optional"
+                    value={ticketFormData.assigned_to || ''}
+                    onChange={(e) => setTicketFormData({ ...ticketFormData, assigned_to: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-mono text-slate-500 block mb-1">Target Resolution</label>
+                  <input
+                    type="datetime-local"
+                    value={ticketFormData.target_resolution_at || ''}
+                    onChange={(e) => setTicketFormData({ ...ticketFormData, target_resolution_at: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-mono text-slate-500 block mb-1">Related Project</label>
+                  <select
+                    value={ticketFormData.linked_project_id || ''}
+                    onChange={(e) => setTicketFormData({ ...ticketFormData, linked_project_id: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-cyan-500 font-mono"
+                  >
+                    <option value="">Not project related</option>
+                    {projects.map(project => <option key={project.id} value={project.id}>{project.name}</option>)}
                   </select>
                 </div>
               </div>

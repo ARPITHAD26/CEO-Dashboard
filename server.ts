@@ -9,7 +9,7 @@ import { createWorker } from "tesseract.js";
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // Body parsers with support for large file / document uploads
 app.use(express.json({ limit: "50mb" }));
@@ -101,7 +101,8 @@ app.get("/api/db/state", async (_req, res) => {
       "leads", "clients", "employees", "attendance", "leaves",
       "disciplinaryCases", "sites", "complaints", "incidents",
       "trainings", "tasks", "auditLogs", "notifications", "alerts",
-      "itApplications", "itServerNodes", "itTickets", "itSecurityChecks"
+      "itApplications", "itServerNodes", "itTickets", "itSecurityChecks",
+      "itBottlenecks", "itVendorCommitments", "itWeeklyReports", "itProjects", "itTasks"
     ];
 
     const state: Record<string, any[]> = {};

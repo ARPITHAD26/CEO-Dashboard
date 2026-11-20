@@ -892,14 +892,20 @@ export interface ITTicket {
   id: string;
   ticket_no: string;
   subject: string;
+  description?: string;
   requested_by: string;
   department: string;
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
-  category: 'Hardware / Laptop' | 'Software Access' | 'Network / VPN' | 'Biometric Device' | 'Email & Security';
-  status: 'Open' | 'In Progress' | 'Resolved';
+  category: 'Hardware / Laptop' | 'Software Access' | 'Network / VPN' | 'Biometric Device' | 'Email & Security' | 'Hardware issues' | 'Software/application issues' | 'Network and connectivity' | 'User access and permissions' | 'HRMS support' | 'OpsVision support' | 'VAMS support' | 'Vendor-dependent technical issues' | 'IT security incidents' | 'Other IT-related issues';
+  status: 'Open' | 'Assigned' | 'In Progress' | 'Awaiting User' | 'Awaiting Vendor' | 'Resolved' | 'Closed';
   created_at: string;
   resolved_at?: string;
   resolution_notes?: string;
+  assigned_to?: string;
+  target_resolution_at?: string;
+  linked_project_id?: string;
+  linked_project_name?: string;
+  updated_at?: string;
 }
 
 export interface ITSecurityCheck {
@@ -910,6 +916,129 @@ export interface ITSecurityCheck {
   expiry_or_next_date: string;
   score: number;
   details: string;
+}
+
+// Delivery records remain separate from runtime health telemetry so projects,
+// support and application operations can each be managed with clear ownership.
+export type ITProjectStage =
+  | 'Initiation'
+  | 'Requirement Gathering'
+  | 'Business Approval'
+  | 'Development'
+  | 'Testing'
+  | 'User Acceptance Testing (UAT)'
+  | 'Deployment'
+  | 'Post-deployment Review'
+  | 'Completed';
+
+export type ITProjectHealth = 'On Track' | 'At Risk' | 'Delayed' | 'On Hold' | 'Completed';
+
+export interface ITBottleneck {
+  id: string;
+  project_id: string;
+  project_name: string;
+  category: 'Management approval pending' | 'Business requirement clarification' | 'Development/technical issue' | 'Vendor dependency' | 'Data dependency' | 'Resource constraint' | 'Client approval' | 'Testing/UAT pending' | 'Infrastructure or connectivity issue' | 'Financial/budget approval';
+  description: string;
+  reported_at: string;
+  reported_by: string;
+  responsible_person: string;
+  support_required: string;
+  expected_resolution_date: string;
+  status: 'Open' | 'In Progress' | 'Awaiting Decision' | 'Resolved' | 'Closed';
+  escalation_level: 'Project Team' | 'IT Head' | 'Management' | 'CEO';
+  resolution_details?: string;
+  closed_at?: string;
+  updated_at: string;
+}
+
+export interface ITVendorCommitment {
+  id: string;
+  vendor_name: string;
+  project_id?: string;
+  project_name: string;
+  application_name?: string;
+  agreed_scope: string;
+  committed_date: string;
+  deliverables_completed: string;
+  deliverables_pending: string;
+  status: 'On Track' | 'At Risk' | 'Delayed' | 'Completed' | 'On Hold';
+  support_maintenance_status: 'Active' | 'Expiring' | 'Expired' | 'Not Applicable';
+  issue_waiting_on_vendor?: string;
+  management_action_required?: string;
+  owner: string;
+  updated_at: string;
+}
+
+export interface ITWeeklyReport {
+  id: string;
+  week_start: string;
+  week_end: string;
+  prepared_by: string;
+  generated_at: string;
+  status: 'Draft' | 'Reviewed' | 'Finalised';
+  previous_week_plan: string[];
+  work_completed: string[];
+  work_remaining: string[];
+  coming_week_plan: string[];
+  milestones_achieved: string[];
+  delayed_deliverables: string[];
+  bottlenecks_and_dependencies: string[];
+  decisions_required: string[];
+  reviewed_by?: string;
+  reviewed_at?: string;
+  review_notes?: string;
+  // Operational-report compatibility fields used by the existing IT work log screen.
+  week_label?: string;
+  start_date?: string;
+  end_date?: string;
+  sla_compliance_pct?: number;
+  mttr_hours?: number;
+  uptime_pct?: number;
+  tickets_resolved?: number;
+  tickets_total?: number;
+  biometric_sync_rate?: number;
+  total_hours_logged?: number;
+  key_achievements?: string[];
+  maintenance_completed?: any[];
+  rca_incidents?: Array<{ incident: string; owner?: string; root_cause: string; resolution: string; preventative_measure: string }>;
+  planned_next_week?: string[];
+}
+
+export interface ITDailyWorkLog {
+  id: string;
+  date: string;
+  engineer_name: string;
+  engineer_role: string;
+  category: 'Infrastructure & Cloud' | 'Field Biometrics & IoT' | 'ERP & Software' | 'Network & Security' | 'User Support & Assets';
+  task_title: string;
+  summary: string;
+  status: 'Completed' | 'In Progress' | 'Blocked';
+  hours_spent: number;
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  impacted_system_or_site: string;
+  blocker_note?: string;
+  created_at: string;
+}
+
+export interface ITMonthlyReport {
+  id: string;
+  month_label: string;
+  prepared_by: string;
+  executive_summary: string;
+  overall_uptime_pct: number;
+  sla_compliance_pct: number;
+  tickets_resolved_within_sla: number;
+  total_tickets_handled: number;
+  cloud_cost_inr: number;
+  cloud_cost_budget_inr: number;
+  security_score_pct: number;
+  backup_success_rate: number;
+  biometric_devices_healthy: number;
+  biometric_devices_total: number;
+  major_milestones: any[];
+  team_contributors: any[];
+  risk_register: any[];
+  strategic_initiatives_next_month: any[];
 }
 
 export type PrivateTenderStage =
@@ -1026,6 +1155,11 @@ export interface AppState {
   itServerNodes: ITServerNode[];
   itTickets: ITTicket[];
   itSecurityChecks: ITSecurityCheck[];
+  itBottlenecks?: ITBottleneck[];
+  itVendorCommitments?: ITVendorCommitment[];
+  itWeeklyReports?: ITWeeklyReport[];
+  itDailyWorkLogs?: ITDailyWorkLog[];
+  itMonthlyReports?: ITMonthlyReport[];
   // Extended Procurement & Tender Cockpit
   tenders: Tender[];
   tenderGoNoGos: TenderGoNoGo[];
@@ -1217,6 +1351,18 @@ export interface ITProject {
   workstreams: string[];
   blockers_count: number;
   evidence_files: ContextFile[];
+  project_category?: 'Internal' | 'Commercial' | 'Client-specific';
+  business_objective?: string;
+  development_partner?: string;
+  actual_start_date?: string;
+  original_target_date?: string;
+  revised_target_date?: string;
+  current_stage?: ITProjectStage;
+  health_status?: ITProjectHealth;
+  next_milestone?: string;
+  dependencies_and_approvals?: string;
+  updated_by?: string;
+  updated_at?: string;
 }
 
 export interface ITTask {
@@ -1237,6 +1383,11 @@ export interface ITTask {
   blocker?: string;
   remarks?: string;
   evidence_files: ContextFile[];
+  actual_start?: string;
+  delay_reason?: string;
+  revised_target_date?: string;
+  updated_by?: string;
+  updated_at?: string;
 }
 
 export interface OtherInitiative {

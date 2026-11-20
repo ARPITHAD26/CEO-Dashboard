@@ -36,7 +36,7 @@ import {
 import { 
   PurchaseRequest, Invoice, Expense, Lead, Client, Vendor, Employee,
   Attendance, Leave, DisciplinaryCase, Site, Complaint, Incident, Training, 
-  Task, AuditLog, Notification, Alert, ITApplication, ITServerNode, ITTicket, ITSecurityCheck, AppState,
+  Task, AuditLog, Notification, Alert, ITApplication, ITServerNode, ITTicket, ITSecurityCheck, ITBottleneck, ITVendorCommitment, ITWeeklyReport, AppState,
   Tender, TenderGoNoGo, TenderCorrigendum, TenderQuery, ContractRecord, ClientEscalation,
   EmdRecord, PbgRecord, Indent, VendorQuotation, ComparativeStatement, PurchaseOrder,
   StockItem, StockTransaction, GrnRecord, StockIssue, UniformAllocation, MachineryAsset,
@@ -434,6 +434,58 @@ export const INITIAL_IT_SECURITY_CHECKS: ITSecurityCheck[] = [
     expiry_or_next_date: '2026-07-20',
     score: 75,
     details: 'HQ Video Gateway drive is at 85% utilization; scheduled video archiving required'
+  }
+];
+
+// Initial live delivery records make the management architecture immediately
+// usable alongside the application and infrastructure health tabs.
+export const INITIAL_IT_BOTTLENECKS: ITBottleneck[] = [
+  {
+    id: 'ITB-001', project_id: 'ITP-001', project_name: 'OpsVision',
+    category: 'Vendor dependency',
+    description: 'Test-device firmware update is pending before offline sync stress testing can be signed off.',
+    reported_at: '2026-07-15T09:30:00Z', reported_by: 'Raghavendra', responsible_person: 'Device vendor / Procurement',
+    support_required: 'Expedite the firmware package and two replacement test devices.', expected_resolution_date: '2026-07-19',
+    status: 'In Progress', escalation_level: 'IT Head', updated_at: '2026-07-15T12:00:00Z'
+  },
+  {
+    id: 'ITB-002', project_id: 'ITP-003', project_name: 'VAMS / Swagatam',
+    category: 'Client approval',
+    description: 'Reception workflow and visitor-data retention policy await business-user sign-off.',
+    reported_at: '2026-07-14T10:00:00Z', reported_by: 'Arpitha', responsible_person: 'Operations Head',
+    support_required: 'Approve the workflow and retention policy at the next steering review.', expected_resolution_date: '2026-07-18',
+    status: 'Awaiting Decision', escalation_level: 'Management', updated_at: '2026-07-15T11:15:00Z'
+  }
+];
+
+export const INITIAL_IT_VENDOR_COMMITMENTS: ITVendorCommitment[] = [
+  {
+    id: 'ITV-001', vendor_name: 'Hostinger', project_name: 'CEO Dashboard', application_name: 'CEO Dashboard',
+    agreed_scope: 'VPS hosting, daily snapshot retention and production SSL support.', committed_date: '2026-12-31',
+    deliverables_completed: 'VPS provisioned; SSL and daily snapshots enabled.', deliverables_pending: 'Monthly performance review.',
+    status: 'On Track', support_maintenance_status: 'Active', owner: 'IT Operations', updated_at: '2026-07-15T09:00:00Z'
+  },
+  {
+    id: 'ITV-002', vendor_name: 'ZKTeco Integration Partner', project_id: 'ITP-002', project_name: 'HRMS',
+    agreed_scope: 'Device SDK support and biometric terminal API compatibility.', committed_date: '2026-07-22',
+    deliverables_completed: 'Nightly log pull connector delivered.', deliverables_pending: 'Validate remaining terminal firmware compatibility.',
+    status: 'At Risk', support_maintenance_status: 'Active', issue_waiting_on_vendor: 'Updated firmware and compatibility confirmation.',
+    management_action_required: 'No action unless the July 22 commitment slips.', owner: 'Arpitha', updated_at: '2026-07-15T10:30:00Z'
+  }
+];
+
+export const INITIAL_IT_WEEKLY_REPORTS: ITWeeklyReport[] = [
+  {
+    id: 'ITWR-2026-07-13', week_start: '2026-07-13', week_end: '2026-07-19', prepared_by: 'IT Head',
+    generated_at: '2026-07-16T17:30:00Z', status: 'Reviewed',
+    previous_week_plan: ['Complete OpsVision geofence validation.', 'Start HRMS nightly biometric pull.', 'Submit VAMS WhatsApp verification.'],
+    work_completed: ['OpsVision geofence validation completed.', 'HRMS nightly biometric connector completed.'],
+    work_remaining: ['OpsVision offline sync stress test.', 'VAMS WhatsApp Business verification.'],
+    coming_week_plan: ['Deploy OpsVision pilot to Vani Vilas Hospital.', 'Complete VAMS visitor QR UAT.'],
+    milestones_achieved: ['OpsVision GPS geofence passed.', 'HRMS biometric connector delivered.'],
+    delayed_deliverables: [],
+    bottlenecks_and_dependencies: ['OpsVision test-device firmware is vendor pending.', 'VAMS retention policy needs business approval.'],
+    decisions_required: ['Approve VAMS visitor-data retention policy.'], reviewed_by: 'IT Head', reviewed_at: '2026-07-16T18:00:00Z'
   }
 ];
 
@@ -3065,6 +3117,9 @@ export function getSeedState(): AppState {
     itServerNodes: [...INITIAL_IT_SERVER_NODES],
     itTickets: [...INITIAL_IT_TICKETS],
     itSecurityChecks: [...INITIAL_IT_SECURITY_CHECKS],
+    itBottlenecks: [...INITIAL_IT_BOTTLENECKS],
+    itVendorCommitments: [...INITIAL_IT_VENDOR_COMMITMENTS],
+    itWeeklyReports: [...INITIAL_IT_WEEKLY_REPORTS],
     tenders: [...INITIAL_TENDERS],
     governmentTenders: [...INITIAL_GOVERNMENT_TENDERS],
     privateTenders: [],
@@ -3157,6 +3212,9 @@ export function getEmptyState(): AppState {
     itServerNodes: [],
     itTickets: [],
     itSecurityChecks: [],
+    itBottlenecks: [],
+    itVendorCommitments: [],
+    itWeeklyReports: [],
     tenders: [],
     governmentTenders: [],
     privateTenders: [],

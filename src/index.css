@@ -150,6 +150,21 @@
   opacity: 0.25 !important;
 }
 
+/* IT health workspace: a clean, layered telemetry wash replaces the global square grid. */
+.it-health-workspace {
+  background:
+    radial-gradient(ellipse 48rem 24rem at 8% 0%, rgba(6, 182, 212, 0.14), transparent 72%),
+    radial-gradient(ellipse 38rem 20rem at 96% 32%, rgba(20, 184, 166, 0.10), transparent 72%),
+    linear-gradient(135deg, #07131c 0%, #0a1723 48%, #071018 100%);
+}
+
+.light .it-health-workspace {
+  background:
+    radial-gradient(ellipse 48rem 24rem at 8% 0%, rgba(6, 182, 212, 0.12), transparent 72%),
+    radial-gradient(ellipse 38rem 20rem at 96% 32%, rgba(20, 184, 166, 0.08), transparent 72%),
+    linear-gradient(135deg, #f9fdff 0%, #f0fbfd 48%, #f8fafc 100%);
+}
+
 /* Interaction elements */
 .light .hover\:bg-\[\#161B2A\]\/60:hover {
   background-color: #f1f5f9 !important;

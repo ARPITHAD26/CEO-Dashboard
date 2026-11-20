@@ -820,6 +820,11 @@ export function filterStateForRole(state: AppState, role: Role, userEmail: strin
     filtered.itServerNodes = state.itServerNodes;
     filtered.itTickets = state.itTickets;
     filtered.itSecurityChecks = state.itSecurityChecks;
+    filtered.itProjects = state.itProjects;
+    filtered.itTasks = state.itTasks;
+    filtered.itBottlenecks = state.itBottlenecks;
+    filtered.itVendorCommitments = state.itVendorCommitments;
+    filtered.itWeeklyReports = state.itWeeklyReports;
     filtered.employees = state.employees;
   }
 

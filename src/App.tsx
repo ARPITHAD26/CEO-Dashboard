@@ -144,8 +144,16 @@ export default function App() {
         setCloudSyncing(true);
         const firestoreState = await fetchAppStateFromFirestore();
         if (isMounted && firestoreState && (firestoreState.sites?.length > 0 || firestoreState.clients?.length > 0)) {
-          setState(firestoreState);
-          saveState(firestoreState);
+          const stateWithIT = {
+            ...firestoreState,
+            itProjects: firestoreState.itProjects?.length ? firestoreState.itProjects : state.itProjects,
+            itTasks: firestoreState.itTasks?.length ? firestoreState.itTasks : state.itTasks,
+            itBottlenecks: firestoreState.itBottlenecks?.length ? firestoreState.itBottlenecks : state.itBottlenecks,
+            itVendorCommitments: firestoreState.itVendorCommitments?.length ? firestoreState.itVendorCommitments : state.itVendorCommitments,
+            itWeeklyReports: firestoreState.itWeeklyReports?.length ? firestoreState.itWeeklyReports : state.itWeeklyReports
+          };
+          setState(stateWithIT);
+          saveState(stateWithIT);
         }
       } catch (err) {
         console.warn('Initial cloud sync fallback to local storage:', err);
@@ -225,8 +233,10 @@ export default function App() {
   return (
     <div className={`min-h-screen bg-[#05070A] text-slate-200 font-sans flex relative overflow-hidden ${theme}`}>
 
-      {/* Decorative background vectors */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0B0F19_1px,transparent_1px),linear-gradient(to_bottom,#0B0F19_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-35 pointer-events-none" />
+      {/* Keep focused workspaces free from the global command-grid overlay. */}
+      {activeTab !== 'Procurement Head' && activeTab !== 'IT Head' && (
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0B0F19_1px,transparent_1px),linear-gradient(to_bottom,#0B0F19_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-35 pointer-events-none" />
+      )}
 
       {/* 1. Dashboard Left Sidebar */}
       {/* Mobile backdrop */}
@@ -626,7 +636,7 @@ export default function App() {
                 {activeTab === 'HR Head' && 'Workforce Directory, Leaves & Disciplinary logs'}
                 {activeTab === 'Operations Head' && 'Sites, Complaints & SLA Incidents Desk'}
                 {activeTab === 'Training Head' && 'Compliance Training · Unit / Client Facility Master & Deployment'}
-                {activeTab === 'IT Head' && 'IT Infrastructure Health, VPS Nodes & Telemetry'}
+                {activeTab === 'IT Head' && 'IT & Application Health Panel'}
                 {activeTab === 'Admin' && 'System Access Matrix & Database Integrity Settings'}
               </h1>
             </div>
