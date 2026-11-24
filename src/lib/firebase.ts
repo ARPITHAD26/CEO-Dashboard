@@ -19,6 +19,7 @@ import {
   query,
   getDocFromServer
 } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 // Load configuration from the local firebase-applet-config file
 import firebaseConfig from '../../firebase-applet-config.json';
@@ -28,6 +29,7 @@ export const auth = getAuth(app);
 export const db = firebaseConfig.firestoreDatabaseId 
   ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
   : getFirestore(app);
+export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 
 // Google Sign-In helper

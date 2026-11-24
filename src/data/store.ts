@@ -18,6 +18,12 @@ export function getInitialState(): AppState {
         return {
           ...seed,
           ...parsed,
+          stockItems: parsed.stockItems?.length ? parsed.stockItems : seed.stockItems,
+          stockTransactions: parsed.stockTransactions?.length ? parsed.stockTransactions : seed.stockTransactions,
+          grnRecords: parsed.grnRecords?.length ? parsed.grnRecords : seed.grnRecords,
+          stockIssues: parsed.stockIssues?.length ? parsed.stockIssues : seed.stockIssues,
+          uniformAllocations: parsed.uniformAllocations?.length ? parsed.uniformAllocations : seed.uniformAllocations,
+          machineryAssets: parsed.machineryAssets?.length ? parsed.machineryAssets : seed.machineryAssets,
           crmLeads: parsed.crmLeads?.length ? parsed.crmLeads : seed.crmLeads,
           crmRequirements: parsed.crmRequirements?.length ? parsed.crmRequirements : seed.crmRequirements,
           crmFollowUps: parsed.crmFollowUps?.length ? parsed.crmFollowUps : seed.crmFollowUps,

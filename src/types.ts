@@ -60,6 +60,20 @@ export interface Vendor {
   rating_responsiveness?: number;
 }
 
+export interface ProcurementMasterOption {
+  id: string;
+  name: string;
+}
+
+export interface ProcurementTeamMember {
+  id: string;
+  name: string;
+  title: string;
+  email: string;
+  phone: string;
+  active: boolean;
+}
+
 // -------------------------------------------------------------
 // TENDER MANAGEMENT & LIFECYCLE
 // -------------------------------------------------------------
@@ -330,6 +344,8 @@ export interface GovTenderCorrigendumEntry {
   revised_emd?: number;
   revised_boq?: boolean;
   revised_eligibility?: string;
+  document_name?: string;
+  document_data?: string;
   management_reviewed: boolean;
   reviewed_by?: string;
   review_date?: string;
@@ -344,10 +360,16 @@ export interface GovernmentTender {
   client_name: string;
   tender_name: string;
   nit_reference_number: string;
-  portal_name: 'GeM' | 'CPPP' | 'State Portal' | 'IREPS' | 'Other';
+  nit_reference_date?: string;
+  corrigendum_addendum_details?: string;
+  corrigendum_addendum_document_name?: string;
+  corrigendum_addendum_document_data?: string;
+  portal_name: 'GeM' | 'CPPP' | 'KPPP' | 'IREPS' | 'State Portal' | 'Other';
   portal_tender_id: string;
   tender_url: string;
   scope_of_work: string;
+  service_category?: string;
+  total_manpower?: number;
   location: string;
   tender_type: 'Open' | 'Limited' | 'Single' | 'Rate Contract' | 'EOI' | 'RFP';
   estimated_tender_value: number;
@@ -358,6 +380,7 @@ export interface GovernmentTender {
   doc_download_start: string;
   doc_download_end: string;
   pre_bid_meeting_date?: string;
+  previous_meeting_date?: string;
   query_submission_last_date?: string;
   last_date_of_submission: string;
   technical_bid_opening_date?: string;
@@ -497,6 +520,7 @@ export interface ComparativeStatement {
 
 export interface PurchaseOrder {
   id: string;
+  indent_request_id?: string;
   po_number: string;
   vendor_id: string;
   vendor_name: string;
@@ -520,6 +544,7 @@ export interface PurchaseOrder {
   status: 'Draft' | 'Approval' | 'Released' | 'Acknowledged' | 'Partially Delivered' | 'Fully Delivered' | 'Closed' | 'Cancelled';
   payment_status: 'Invoice Received' | 'Under Verification' | 'Approved' | 'Payment Pending' | 'Payment Released' | 'Overdue';
   approved_by: string;
+  document_url?: string;
 }
 
 // -------------------------------------------------------------
@@ -544,7 +569,7 @@ export interface StockItem {
   id: string;
   item_code: string;
   name: string;
-  category: StoreCategory;
+  category: string;
   unit: string;
   opening_stock: number;
   receipts: number;
@@ -1135,6 +1160,9 @@ export interface PrivateTender {
 export interface AppState {
   purchaseRequests: PurchaseRequest[];
   vendors: Vendor[];
+  procurementMasterCategories: ProcurementMasterOption[];
+  procurementMasterUnits: ProcurementMasterOption[];
+  procurementTeamMembers: ProcurementTeamMember[];
   invoices: Invoice[];
   expenses: Expense[];
   leads: Lead[];
@@ -2507,4 +2535,3 @@ export interface AIStudioProjectReview {
   assumptions: string[];
   missingDataNotes: string[];
 }
-

@@ -8,8 +8,9 @@ import {
   ShieldAlert, Award, FileText, Image as ImageIcon, Users, 
   Search, Check, X, Bookmark, Building2, BookOpen, UserCheck,
   ExternalLink, Filter, Star, Sparkles, MapPin, Phone, Mail, ShieldCheck, RotateCcw,
-  Maximize2, Download
+  Maximize2, Download, Upload, Loader2
 } from 'lucide-react';
+import { uploadTrainingEvidenceFile } from '../lib/firebaseService';
 
 interface TrainingViewProps {
   state: AppState;
@@ -164,6 +165,10 @@ export default function TrainingView({
   const [evidenceViewerFile, setEvidenceViewerFile] = useState<ContextFile | null>(null);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [evidenceUploadSession, setEvidenceUploadSession] = useState<TDSessionRecord | null>(null);
+  const [pendingEvidenceFiles, setPendingEvidenceFiles] = useState<File[]>([]);
+  const [evidenceUploadError, setEvidenceUploadError] = useState<string | null>(null);
+  const [isUploadingEvidence, setIsUploadingEvidence] = useState(false);
 
   // Master topics list (with custom added ones and persistence)
   const MASTER_TOPICS_STORAGE_KEY = 'spoorthy_training_master_topics';
@@ -411,17 +416,7 @@ export default function TrainingView({
       failed_count: Math.max(0, evaluatedPax - passedPax),
       pass_pct: passPct,
       status: sessionForm.status || 'Completed',
-      evidence_files: sessionForm.evidence_files || [
-        {
-          id: `EV-${Date.now()}-1`,
-          file_name: 'Attendance_Sheet_Signed.pdf',
-          file_type: 'pdf',
-          file_url: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&auto=format&fit=crop&q=80',
-          uploaded_by: sessionForm.trainer || 'Trainer',
-          uploaded_at: new Date().toISOString(),
-          caption: 'Signed Attendance Register by Ward Supervisor'
-        }
-      ],
+      evidence_files: sessionForm.evidence_files || [],
       remarks: sessionForm.remarks || 'Training session conducted successfully with hands-on demonstration.',
       follow_up_action: sessionForm.follow_up_action || '',
       created_at: new Date().toISOString(),
@@ -452,7 +447,119 @@ export default function TrainingView({
 
     onUpdateState(nextState);
     setIsSessionModalOpen(false);
+    setPendingEvidenceFiles([]);
+    setEvidenceUploadError(null);
+    setEvidenceUploadSession(newRecord);
     triggerSuccess(`Training session "${newRecord.topic}" saved successfully!`);
+  };
+
+  const openEvidenceUpload = (session: TDSessionRecord) => {
+    setEvidenceUploadSession(session);
+    setPendingEvidenceFiles([]);
+    setEvidenceUploadError(null);
+  };
+
+  const addEvidenceFiles = (files: FileList | null, kind: 'pdf' | 'image') => {
+    if (!files?.length) return;
+
+    const selectedFiles = Array.from(files);
+    const maxFileSize = kind === 'pdf' ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+    const validFiles = selectedFiles.filter((file) => {
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+      const isImage = file.type.startsWith('image/');
+      return kind === 'pdf' ? isPdf : isImage;
+    });
+
+    if (validFiles.length !== selectedFiles.length) {
+      setEvidenceUploadError(kind === 'pdf' ? 'Choose a PDF document.' : 'Choose image files only.');
+      return;
+    }
+
+    const oversizedFile = validFiles.find(file => file.size > maxFileSize);
+    if (oversizedFile) {
+      setEvidenceUploadError(`${oversizedFile.name} is too large. PDFs can be up to 10 MB and photos up to 5 MB each.`);
+      return;
+    }
+
+    const selectedPhotoCount = pendingEvidenceFiles.filter(file => file.type.startsWith('image/')).length;
+    const exceedsPhotoLimit = kind === 'image' && validFiles.length > 5 - selectedPhotoCount;
+    setEvidenceUploadError(exceedsPhotoLimit ? 'You can attach up to five photos to one training session.' : null);
+    setPendingEvidenceFiles(current => {
+      const withoutSameType = kind === 'pdf'
+        ? current.filter(file => !(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')))
+        : current;
+      const availablePhotoSlots = Math.max(0, 5 - withoutSameType.filter(file => file.type.startsWith('image/')).length);
+      const filesToAdd = kind === 'image' ? validFiles.slice(0, availablePhotoSlots) : validFiles.slice(0, 1);
+
+      return [...withoutSameType, ...filesToAdd];
+    });
+  };
+
+  const removePendingEvidenceFile = (fileToRemove: File) => {
+    setPendingEvidenceFiles(current => current.filter(file => file !== fileToRemove));
+  };
+
+  const handleEvidenceUpload = async () => {
+    if (!evidenceUploadSession || pendingEvidenceFiles.length === 0) {
+      setEvidenceUploadError('Choose a PDF or at least one photo before uploading.');
+      return;
+    }
+
+    setIsUploadingEvidence(true);
+    setEvidenceUploadError(null);
+
+    try {
+      const uploadedAt = new Date().toISOString();
+      const uploadedFiles = await Promise.all(pendingEvidenceFiles.map(async (file, index): Promise<ContextFile> => {
+        const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+        const fileUrl = await uploadTrainingEvidenceFile(evidenceUploadSession.id, file);
+
+        return {
+          id: `EV-${evidenceUploadSession.id}-${Date.now()}-${index}`,
+          file_name: file.name,
+          file_type: isPdf ? 'pdf' : 'image',
+          file_url: fileUrl,
+          file_size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+          uploaded_by: currentUserEmail,
+          uploaded_at: uploadedAt,
+          context_type: 'Session',
+          context_id: evidenceUploadSession.id,
+          caption: isPdf ? 'Training session supporting document' : 'Training session photo evidence'
+        };
+      }));
+
+      const existingSession = tdSessions.find(session => session.id === evidenceUploadSession.id) || evidenceUploadSession;
+      const updatedSession: TDSessionRecord = {
+        ...existingSession,
+        evidence_files: [...(existingSession.evidence_files || []), ...uploadedFiles],
+        updated_at: uploadedAt
+      };
+      const sessionExists = tdSessions.some(session => session.id === evidenceUploadSession.id);
+      const nextState: AppState = {
+        ...state,
+        tdSessions: sessionExists
+          ? tdSessions.map(session => session.id === evidenceUploadSession.id ? updatedSession : session)
+          : [updatedSession, ...tdSessions]
+      };
+
+      logAuditEntry(
+        nextState,
+        currentUserEmail,
+        'UPDATE',
+        'TrainingSession',
+        evidenceUploadSession.id,
+        `Attached ${uploadedFiles.length} evidence file${uploadedFiles.length === 1 ? '' : 's'} to training session: ${existingSession.topic}`
+      );
+      onUpdateState(nextState);
+      setEvidenceUploadSession(null);
+      setPendingEvidenceFiles([]);
+      triggerSuccess(`${uploadedFiles.length} training evidence file${uploadedFiles.length === 1 ? '' : 's'} uploaded successfully!`);
+    } catch (error) {
+      console.error('Training evidence upload failed:', error);
+      setEvidenceUploadError(error instanceof Error ? error.message : 'The upload could not be completed. Please check your connection and try again.');
+    } finally {
+      setIsUploadingEvidence(false);
+    }
   };
 
   // Add New Facility Unit
@@ -1156,6 +1263,25 @@ export default function TrainingView({
                     <strong>Remarks:</strong> {session.remarks}
                   </p>
                 )}
+
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => openEvidenceUpload(session)}
+                    className="py-2 px-2.5 bg-white hover:bg-sky-50 text-sky-700 border border-dashed border-sky-300 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Upload PDF</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openEvidenceUpload(session)}
+                    className="py-2 px-2.5 bg-white hover:bg-sky-50 text-sky-700 border border-dashed border-sky-300 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    <span>Upload Photos</span>
+                  </button>
+                </div>
 
                 {/* Evidence Thumbnail Bar */}
                 {session.evidence_files && session.evidence_files.length > 0 && (
@@ -2352,6 +2478,128 @@ export default function TrainingView({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* LIVE TRAINING EVIDENCE UPLOAD                                 */}
+      {/* ------------------------------------------------------------- */}
+      {evidenceUploadSession && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white border border-sky-300 rounded-3xl max-w-xl w-full shadow-2xl overflow-hidden text-slate-800">
+            <div className="bg-gradient-to-r from-emerald-600 to-sky-700 px-5 py-4 text-white flex items-start justify-between gap-4">
+              <div className="flex items-start gap-2.5">
+                <CheckCircle className="w-5 h-5 text-emerald-100 mt-0.5 shrink-0" />
+                <div>
+                  <h3 className="text-base font-bold">Session saved — add evidence</h3>
+                  <p className="text-[11px] text-white/80 mt-0.5 line-clamp-1">{evidenceUploadSession.topic}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => !isUploadingEvidence && setEvidenceUploadSession(null)}
+                disabled={isUploadingEvidence}
+                className="text-white/80 hover:text-white disabled:opacity-50 p-1 rounded-lg"
+                aria-label="Close evidence upload"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4 text-xs">
+              <p className="text-slate-600">
+                Attach a signed attendance PDF and photos from the completed training. You can also add evidence later from the live training card.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="min-h-28 border-2 border-dashed border-sky-200 hover:border-sky-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center gap-2 cursor-pointer transition bg-sky-50/50 hover:bg-sky-50">
+                  <FileText className="w-6 h-6 text-sky-600" />
+                  <span className="font-bold text-slate-800">Upload PDF</span>
+                  <span className="text-[10px] text-slate-500">Attendance sheet or report · max 10 MB</span>
+                  <input
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    className="sr-only"
+                    disabled={isUploadingEvidence}
+                    onChange={(event) => {
+                      addEvidenceFiles(event.target.files, 'pdf');
+                      event.target.value = '';
+                    }}
+                  />
+                </label>
+
+                <label className="min-h-28 border-2 border-dashed border-sky-200 hover:border-sky-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center gap-2 cursor-pointer transition bg-sky-50/50 hover:bg-sky-50">
+                  <ImageIcon className="w-6 h-6 text-sky-600" />
+                  <span className="font-bold text-slate-800">Upload Photos</span>
+                  <span className="text-[10px] text-slate-500">Up to 5 images · max 5 MB each</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="sr-only"
+                    disabled={isUploadingEvidence}
+                    onChange={(event) => {
+                      addEvidenceFiles(event.target.files, 'image');
+                      event.target.value = '';
+                    }}
+                  />
+                </label>
+              </div>
+
+              {evidenceUploadError && (
+                <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-rose-700 font-medium">
+                  {evidenceUploadError}
+                </p>
+              )}
+
+              {pendingEvidenceFiles.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] uppercase tracking-wide font-bold text-slate-500">Ready to upload ({pendingEvidenceFiles.length})</p>
+                  <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
+                    {pendingEvidenceFiles.map((file, index) => {
+                      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+                      return (
+                        <div key={`${file.name}-${file.lastModified}-${index}`} className="flex items-center gap-2 rounded-xl bg-sky-50 border border-sky-100 px-3 py-2">
+                          {isPdf ? <FileText className="w-4 h-4 text-sky-600 shrink-0" /> : <ImageIcon className="w-4 h-4 text-sky-600 shrink-0" />}
+                          <span className="min-w-0 flex-1 truncate font-semibold text-slate-700">{file.name}</span>
+                          <span className="shrink-0 text-[10px] text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                          <button
+                            type="button"
+                            onClick={() => removePendingEvidenceFile(file)}
+                            disabled={isUploadingEvidence}
+                            className="shrink-0 text-slate-400 hover:text-rose-600 disabled:opacity-50"
+                            aria-label={`Remove ${file.name}`}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-3 border-t border-sky-100 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEvidenceUploadSession(null)}
+                  disabled={isUploadingEvidence}
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold disabled:opacity-50"
+                >
+                  {pendingEvidenceFiles.length ? 'Upload Later' : 'Skip for Now'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleEvidenceUpload}
+                  disabled={isUploadingEvidence || pendingEvidenceFiles.length === 0}
+                  className="px-4 py-2 bg-sky-600 hover:bg-sky-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center gap-2 shadow-md shadow-sky-500/20"
+                >
+                  {isUploadingEvidence ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  {isUploadingEvidence ? 'Uploading…' : `Upload ${pendingEvidenceFiles.length || ''} File${pendingEvidenceFiles.length === 1 ? '' : 's'}`}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

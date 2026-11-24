@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react';
-import { AppState, PurchaseRequest, Vendor, Task, Role } from '../types';
+import { AppState, PurchaseOrder, PurchaseRequest, Vendor, Task, Role } from '../types';
 import { logAuditEntry, saveState } from '../data/store';
 import { 
   ShoppingBag, Sliders, PlusCircle, CheckCircle, Trash2, 
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { StoresAndInventoryView } from './StoresAndInventoryView';
 import { ProcurementTeamTaskView } from './ProcurementTeamTaskView';
+import { ProcurementMasterDataView } from './ProcurementMasterDataView';
 
 interface ProcurementViewProps {
   state: AppState;
@@ -26,12 +27,13 @@ export default function ProcurementView({
   subRoleName,
   currentRole = 'Procurement Head'
 }: ProcurementViewProps) {
-  const allTabs: { id: 'requests' | 'stores' | 'teamtasks' | 'vendors' | 'tasks'; label: string; icon: any }[] = [
+  const allTabs: { id: 'requests' | 'stores' | 'teamtasks' | 'vendors' | 'tasks' | 'master-data'; label: string; icon: any }[] = [
     { id: 'requests', label: 'Purchase Indents & 3-Way Match', icon: ShoppingBag },
     { id: 'stores', label: 'Stores & Material Ledger', icon: Boxes },
     { id: 'teamtasks', label: 'Team Daily Tasks & EOD', icon: CheckSquare },
     { id: 'vendors', label: 'Registered Vendors', icon: UserCheck },
-    { id: 'tasks', label: 'Assigned System Tasks', icon: Layers }
+    { id: 'tasks', label: 'Assigned System Tasks', icon: Layers },
+    { id: 'master-data', label: 'Master Data', icon: Sliders }
   ];
 
   const availableTabs = allowedSubViews && allowedSubViews.length > 0
@@ -48,9 +50,29 @@ export default function ProcurementView({
   });
   const [editingPrId, setEditingPrId] = useState<string | null>(null);
   const [editingVendorId, setEditingVendorId] = useState<string | null>(null);
-  const [activeSubTab, setActiveSubTab] = useState<'requests' | 'stores' | 'teamtasks' | 'vendors' | 'tasks'>(defaultTab);
+  const [activeSubTab, setActiveSubTab] = useState<'requests' | 'stores' | 'teamtasks' | 'vendors' | 'tasks' | 'master-data'>(defaultTab);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [isPurchaseOrderModalOpen, setIsPurchaseOrderModalOpen] = useState(false);
+  const [purchaseOrderError, setPurchaseOrderError] = useState('');
+  const [purchaseOrderForm, setPurchaseOrderForm] = useState({
+    indentRequestId: '',
+    poNumber: '',
+    vendorId: '',
+    poDate: new Date().toISOString().slice(0, 10),
+    itemName: '',
+    category: 'Consumables',
+    quantity: 1,
+    rate: 0,
+    taxPct: 0,
+    deliveryLocation: '',
+    expectedDeliveryDate: '',
+    paymentTerms: '',
+    warranty: '',
+    approvalStatus: 'Approval' as PurchaseOrder['status'],
+    approvedBy: '',
+    documentUrl: ''
+  });
 
   // Stats
   const totalPRs = state.purchaseRequests.length;
@@ -179,6 +201,89 @@ export default function ProcurementView({
     triggerSuccess(`PR Approved and Purchase Order issued!`);
   };
 
+  const handlePurchaseOrderSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const vendor = state.vendors.find(candidate => candidate.id === purchaseOrderForm.vendorId);
+    const quantity = Number(purchaseOrderForm.quantity);
+    const rate = Number(purchaseOrderForm.rate);
+    const taxPct = Number(purchaseOrderForm.taxPct);
+    if (!vendor || !purchaseOrderForm.itemName.trim() || !purchaseOrderForm.deliveryLocation.trim() ||
+      !purchaseOrderForm.expectedDeliveryDate || !purchaseOrderForm.paymentTerms.trim() ||
+      !Number.isFinite(quantity) || quantity <= 0 ||
+      !Number.isFinite(rate) || rate < 0 ||
+      !Number.isFinite(taxPct) || taxPct < 0) {
+      setPurchaseOrderError('Complete the required vendor, item, quantity, delivery, and commercial fields.');
+      return;
+    }
+
+    const subtotal = quantity * rate;
+    const taxes = subtotal * taxPct / 100;
+    const po: PurchaseOrder = {
+      id: `PO-${Date.now()}`,
+      indent_request_id: purchaseOrderForm.indentRequestId || undefined,
+      po_number: purchaseOrderForm.poNumber.trim() || `SIS-PO-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`,
+      vendor_id: vendor.id,
+      vendor_name: vendor.name,
+      po_date: purchaseOrderForm.poDate,
+      items: [{
+        item_name: purchaseOrderForm.itemName.trim(),
+        category: purchaseOrderForm.category,
+        quantity,
+        rate,
+        tax_pct: taxPct,
+        amount: subtotal + taxes
+      }],
+      subtotal,
+      taxes,
+      total_value: subtotal + taxes,
+      delivery_location: purchaseOrderForm.deliveryLocation.trim(),
+      expected_delivery_date: purchaseOrderForm.expectedDeliveryDate,
+      payment_terms: purchaseOrderForm.paymentTerms.trim(),
+      warranty: purchaseOrderForm.warranty.trim() || 'Not specified',
+      status: purchaseOrderForm.approvalStatus,
+      payment_status: 'Under Verification',
+      approved_by: purchaseOrderForm.approvalStatus === 'Released'
+        ? purchaseOrderForm.approvedBy.trim() || currentUserEmail
+        : purchaseOrderForm.approvedBy.trim() || 'Pending',
+      document_url: purchaseOrderForm.documentUrl.trim() || undefined
+    };
+
+    let purchaseRequests = state.purchaseRequests;
+    if (po.indent_request_id) {
+      purchaseRequests = purchaseRequests.map(request => request.id === po.indent_request_id
+        ? { ...request, po_number: po.po_number, delivery_date: po.expected_delivery_date }
+        : request);
+    }
+    const nextState = {
+      ...state,
+      purchaseRequests,
+      purchaseOrders: [po, ...(state.purchaseOrders || [])]
+    };
+    logAuditEntry(nextState, currentUserEmail, 'CREATE', 'PurchaseOrder', po.id, 'Created purchase order', JSON.stringify(po));
+    onUpdateState(nextState);
+    setPurchaseOrderForm({
+      indentRequestId: '',
+      poNumber: '',
+      vendorId: '',
+      poDate: new Date().toISOString().slice(0, 10),
+      itemName: '',
+      category: 'Consumables',
+      quantity: 1,
+      rate: 0,
+      taxPct: 0,
+      deliveryLocation: '',
+      expectedDeliveryDate: '',
+      paymentTerms: '',
+      warranty: '',
+      approvalStatus: 'Approval',
+      approvedBy: '',
+      documentUrl: ''
+    });
+    setPurchaseOrderError('');
+    setIsPurchaseOrderModalOpen(false);
+    triggerSuccess(`Purchase order ${po.po_number} created.`);
+  };
+
   // Task updater
   const updateTaskProgress = (taskId: string, pct: number) => {
     const nextTasks = state.tasks.map(t => {
@@ -240,14 +345,14 @@ export default function ProcurementView({
             {/* High Definition Image Container */}
             <div className="relative rounded-2xl overflow-hidden border-2 border-slate-700/80 bg-black shadow-inner flex items-center justify-center min-h-[380px] max-h-[520px]">
               <img 
-                src="/procurement-head-profile.jpg" 
+                src="/procurement-head-profile.jpg?v=20261106"
                 alt="Procurement Head - Executive Portrait" 
                 className="w-full max-h-[500px] object-contain"
                 style={{ imageRendering: '-webkit-optimize-contrast' }}
               />
               <div className="absolute top-2.5 left-2.5 bg-black/85 backdrop-blur-md px-2.5 py-1 rounded-lg border border-cyan-400/40 text-[9.5px] font-mono text-cyan-300 font-bold flex items-center gap-1.5 shadow-lg">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>ORIGINAL HD • 1024 × 682</span>
+                <span>ORIGINAL HD • 768 × 813</span>
               </div>
             </div>
 
@@ -278,7 +383,7 @@ export default function ProcurementView({
               </div>
               <div className="flex items-center gap-2">
                 <a
-                  href="/procurement-head-profile.jpg"
+                  href="/procurement-head-profile.jpg?v=20261106"
                   download="Spoorthy_Procurement_Head_Portrait_HD.jpg"
                   className="px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
                 >
@@ -298,7 +403,7 @@ export default function ProcurementView({
       )}
 
       {/* Procurement Executive Header */}
-      <div className="bg-gradient-to-r from-slate-700 via-slate-800 to-slate-900 text-white p-6 rounded-3xl shadow-xl border border-slate-500/30 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="bg-gradient-to-r from-rose-100 via-pink-100 to-fuchsia-100 text-slate-900 p-6 rounded-3xl shadow-xl border border-pink-200 relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
           {/* Procurement Head HD Photo Frame */}
           <div 
@@ -311,7 +416,7 @@ export default function ProcurementView({
             
             <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-white/90 shadow-xl bg-slate-900">
               <img 
-                src="/procurement-head-profile.jpg" 
+                src="/procurement-head-profile.jpg?v=20261106"
                 alt="Procurement Head" 
                 className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
                 style={{ imageRendering: '-webkit-optimize-contrast' }}
@@ -340,38 +445,35 @@ export default function ProcurementView({
 
           <div>
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-white border border-white/30 flex items-center gap-1">
-                <ShoppingBag className="w-3 h-3 text-slate-200" /> Procurement & Supply
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/70 text-slate-800 border border-pink-200 flex items-center gap-1">
+                <ShoppingBag className="w-3 h-3 text-pink-700" /> Procurement & Supply
               </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 flex items-center gap-1">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 Active Purchase Requests: {totalPRs}
               </span>
             </div>
-            <h1 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5 flex-wrap">
+            <h1 className="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5 flex-wrap">
               <span>Procurement Head</span>
-              <span className="text-xs sm:text-sm font-semibold text-slate-100 font-sans tracking-normal bg-white/10 px-2.5 py-1 rounded-lg border border-white/20">
+              <span className="text-xs sm:text-sm font-semibold text-slate-700 font-sans tracking-normal bg-white/60 px-2.5 py-1 rounded-lg border border-pink-200">
                 Supply Chain Control Tower
               </span>
             </h1>
-            <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
-              Centralized portal governing tender bids, vendor partnerships, stores & stock ledger, 3-way match purchase indents, and team productivity tracking.
-            </p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => setActiveSubTab('requests')}
-            className="px-4 py-2 bg-white/15 hover:bg-white/25 border border-white/30 text-white text-xs font-bold rounded-2xl shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 bg-white/70 hover:bg-white border border-pink-200 text-slate-800 text-xs font-bold rounded-2xl shadow-sm transition flex items-center gap-1.5 cursor-pointer"
           >
-            <PlusCircle className="w-4 h-4 text-slate-200" /> New Indent / Request
+            <PlusCircle className="w-4 h-4 text-pink-700" /> New Indent / Request
           </button>
           <button
             onClick={() => setActiveSubTab('tenders')}
-            className="px-3.5 py-2 bg-white/15 hover:bg-white/25 text-white text-xs font-bold rounded-2xl border border-white/30 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+            className="px-3.5 py-2 bg-white/70 hover:bg-white text-slate-800 text-xs font-bold rounded-2xl border border-pink-200 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
           >
-            <Briefcase className="w-4 h-4 text-slate-200" /> Tender Lifecycle
+            <Briefcase className="w-4 h-4 text-pink-700" /> Tender Lifecycle
           </button>
         </div>
       </div>
@@ -459,6 +561,14 @@ export default function ProcurementView({
         />
       )}
 
+      {activeSubTab === 'master-data' && (
+        <ProcurementMasterDataView
+          state={state}
+          userEmail={currentUserEmail}
+          onUpdateState={onUpdateState}
+        />
+      )}
+
       {(activeSubTab === 'requests' || activeSubTab === 'vendors' || activeSubTab === 'tasks') && (
         /* Main Container */
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -467,7 +577,22 @@ export default function ProcurementView({
           <div className="lg:col-span-2 space-y-4">
             {activeSubTab === 'requests' && (
             <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-4">
-              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider font-mono">Purchase Requests log</h3>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wider font-mono">Purchase Requests log</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">Indent approvals and three-way match purchase order tracking.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPurchaseOrderError('');
+                    setIsPurchaseOrderModalOpen(true);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl bg-cyan-700 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-cyan-600"
+                >
+                  <PlusCircle className="h-4 w-4" /> Create Purchase Order
+                </button>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
@@ -527,6 +652,74 @@ export default function ProcurementView({
                 </table>
               </div>
             </div>
+          )}
+
+          {activeSubTab === 'requests' && (
+            <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
+                <div>
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Purchase Order Management</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">PO details, delivery, commercial terms, approvals, and supporting documents.</p>
+                </div>
+                <span className="rounded-full bg-cyan-500/10 px-2.5 py-1 text-xs font-bold text-cyan-700">
+                  {(state.purchaseOrders || []).length} Purchase Orders
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[1700px] text-left text-xs">
+                  <thead className="bg-muted/50 text-muted-foreground">
+                    <tr>
+                      {['PO Number', 'Vendor', 'Date', 'Items', 'Quantity', 'Rate', 'Taxes', 'Total Value', 'Delivery Location', 'Delivery Date', 'Payment Terms', 'Warranty', 'Approvals', 'PO Document'].map(column => (
+                        <th key={column} className="whitespace-nowrap px-3 py-3 font-semibold">{column}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {(state.purchaseOrders || []).map(po => (
+                      <tr key={po.id} className="align-top hover:bg-muted/25">
+                        <td className="whitespace-nowrap px-3 py-3 font-mono font-bold text-cyan-700">{po.po_number}</td>
+                        <td className="px-3 py-3 font-semibold text-foreground">{po.vendor_name}</td>
+                        <td className="whitespace-nowrap px-3 py-3">{po.po_date || '—'}</td>
+                        <td className="min-w-[220px] px-3 py-3">
+                          {(po.items || []).map((item, index) => (
+                            <div key={`${po.id}-item-${index}`} className={index ? 'mt-2 border-t border-border pt-2' : ''}>
+                              <div className="font-semibold text-foreground">{item.item_name}</div>
+                              <div className="text-[10px] text-muted-foreground">{item.category}</div>
+                            </div>
+                          ))}
+                        </td>
+                        <td className="px-3 py-3">{(po.items || []).map((item, index) => <div key={index} className={index ? 'mt-2' : ''}>{item.quantity}</div>)}</td>
+                        <td className="px-3 py-3">{(po.items || []).map((item, index) => <div key={index} className={index ? 'mt-2' : ''}>₹{Number(item.rate || 0).toLocaleString()}</div>)}</td>
+                        <td className="whitespace-nowrap px-3 py-3">₹{Number(po.taxes || 0).toLocaleString()}</td>
+                        <td className="whitespace-nowrap px-3 py-3 font-bold text-foreground">₹{Number(po.total_value || 0).toLocaleString()}</td>
+                        <td className="min-w-[180px] px-3 py-3">{po.delivery_location || '—'}</td>
+                        <td className="whitespace-nowrap px-3 py-3">{po.expected_delivery_date || '—'}</td>
+                        <td className="min-w-[130px] px-3 py-3">{po.payment_terms || '—'}</td>
+                        <td className="min-w-[120px] px-3 py-3">{po.warranty || '—'}</td>
+                        <td className="min-w-[150px] px-3 py-3">
+                          <span className="block font-semibold text-foreground">{po.status}</span>
+                          <span className="mt-1 block text-[10px] text-muted-foreground">{po.approved_by || 'Pending approval'}</span>
+                        </td>
+                        <td className="px-3 py-3">
+                          {po.document_url
+                            ? <a href={po.document_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 whitespace-nowrap font-semibold text-cyan-700 hover:underline"><FileText className="h-3.5 w-3.5" /> Open document</a>
+                            : <span className="text-muted-foreground">Not attached</span>}
+                        </td>
+                      </tr>
+                    ))}
+                    {(state.purchaseOrders || []).length === 0 && (
+                      <tr>
+                        <td colSpan={14} className="px-6 py-12 text-center">
+                          <FileText className="mx-auto h-8 w-8 text-muted-foreground/50" />
+                          <p className="mt-3 font-semibold text-foreground">No purchase orders yet</p>
+                          <p className="mt-1 text-xs text-muted-foreground">Create a PO to track vendor, tax, delivery, payment, warranty, and approvals.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
           )}
 
           {activeSubTab === 'vendors' && (
@@ -650,8 +843,12 @@ export default function ProcurementView({
                     placeholder="e.g. Heavy Duty Scrubber brushes"
                     value={prForm.item || ''}
                     onChange={e => setPrForm({...prForm, item: e.target.value})}
+                    list="procurement-master-items"
                     className="w-full px-3 py-2 bg-background border border-border rounded-xl focus:outline-none focus:border-cyan-500 text-foreground"
                   />
+                  <datalist id="procurement-master-items">
+                    {state.stockItems.map(item => <option key={item.id} value={item.name}>{item.item_code}</option>)}
+                  </datalist>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -808,6 +1005,128 @@ export default function ProcurementView({
         </div>
 
       </div>
+      )}
+
+      {activeSubTab === 'requests' && isPurchaseOrderModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+          <form onSubmit={handlePurchaseOrderSubmit} className="max-h-[90vh] w-full max-w-3xl space-y-5 overflow-y-auto rounded-3xl border border-slate-200 bg-white p-5 text-slate-800 shadow-2xl sm:p-7">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-cyan-700">Procurement · 3-way match</p>
+                <h2 className="mt-1 text-xl font-bold text-slate-900">Create Purchase Order</h2>
+                <p className="mt-1 text-sm text-slate-500">Record order lines, taxes, delivery terms, approvals, and the PO document.</p>
+              </div>
+              <button type="button" onClick={() => setIsPurchaseOrderModalOpen(false)} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Close purchase order form">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="text-xs font-semibold text-slate-700">
+                Link to purchase indent
+                <select
+                  value={purchaseOrderForm.indentRequestId}
+                  onChange={event => {
+                    const request = state.purchaseRequests.find(candidate => candidate.id === event.target.value);
+                    setPurchaseOrderForm({
+                      ...purchaseOrderForm,
+                      indentRequestId: event.target.value,
+                      itemName: request?.item || purchaseOrderForm.itemName,
+                      quantity: request?.quantity || purchaseOrderForm.quantity,
+                      rate: request ? Math.round(request.estimated_cost / Math.max(request.quantity, 1)) : purchaseOrderForm.rate,
+                      vendorId: request?.vendor_id || purchaseOrderForm.vendorId,
+                      expectedDeliveryDate: request?.delivery_date || purchaseOrderForm.expectedDeliveryDate
+                    });
+                  }}
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-normal"
+                >
+                  <option value="">No indent linked</option>
+                  {state.purchaseRequests.map(request => (
+                    <option key={request.id} value={request.id}>{request.request_no} · {request.item}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                PO number
+                <input value={purchaseOrderForm.poNumber} onChange={event => setPurchaseOrderForm({ ...purchaseOrderForm, poNumber: event.target.value })} placeholder="Auto-generated if blank" className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal" />
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Vendor *
+                <select required value={purchaseOrderForm.vendorId} onChange={event => setPurchaseOrderForm({ ...purchaseOrderForm, vendorId: event.target.value })} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-normal">
+                  <option value="">Select vendor</option>
+                  {state.vendors.map(vendor => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}
+                </select>
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                PO date *
+                <input required type="date" value={purchaseOrderForm.poDate} onChange={event => setPurchaseOrderForm({ ...purchaseOrderForm, poDate: event.target.value })} className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal" />
+              </label>
+              <label className="text-xs font-semibold text-slate-700 sm:col-span-2">
+                Item / service *
+                <input required value={purchaseOrderForm.itemName} onChange={event => setPurchaseOrderForm({ ...purchaseOrderForm, itemName: event.target.value })} placeholder="Item or service description" className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal" />
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Item category
+                <input value={purchaseOrderForm.category} onChange={event => setPurchaseOrderForm({ ...purchaseOrderForm, category: event.target.value })} className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal" />
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Quantity *
+                <input required type="number" min="1" value={purchaseOrderForm.quantity} onChange={event => setPurchaseOrderForm({ ...purchaseOrderForm, quantity: Number(event.target.value) })} className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal" />
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Rate per unit (₹) *
+                <input required type="number" min="0" step="0.01" value={purchaseOrderForm.rate} onChange={event => setPurchaseOrderForm({ ...purchaseOrderForm, rate: Number(event.target.value) })} className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal" />
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Tax rate (%) *
+                <input required type="number" min="0" step="0.01" value={purchaseOrderForm.taxPct} onChange={event => setPurchaseOrderForm({ ...purchaseOrderForm, taxPct: Number(event.target.value) })} className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal" />
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Delivery location *
+                <input required value={purchaseOrderForm.deliveryLocation} onChange={event => setPurchaseOrderForm({ ...purchaseOrderForm, deliveryLocation: event.target.value })} placeholder="Site or warehouse address" className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal" />
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Delivery date *
+                <input required type="date" value={purchaseOrderForm.expectedDeliveryDate} onChange={event => setPurchaseOrderForm({ ...purchaseOrderForm, expectedDeliveryDate: event.target.value })} className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal" />
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Payment terms *
+                <input required value={purchaseOrderForm.paymentTerms} onChange={event => setPurchaseOrderForm({ ...purchaseOrderForm, paymentTerms: event.target.value })} placeholder="e.g. 30 days net" className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal" />
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Warranty
+                <input value={purchaseOrderForm.warranty} onChange={event => setPurchaseOrderForm({ ...purchaseOrderForm, warranty: event.target.value })} placeholder="e.g. 1 year" className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal" />
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Approval status
+                <select value={purchaseOrderForm.approvalStatus} onChange={event => setPurchaseOrderForm({ ...purchaseOrderForm, approvalStatus: event.target.value as PurchaseOrder['status'] })} className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-normal">
+                  <option value="Draft">Draft</option>
+                  <option value="Approval">Pending Approval</option>
+                  <option value="Released">Released</option>
+                </select>
+              </label>
+              <label className="text-xs font-semibold text-slate-700">
+                Approved by
+                <input value={purchaseOrderForm.approvedBy} onChange={event => setPurchaseOrderForm({ ...purchaseOrderForm, approvedBy: event.target.value })} placeholder="Approver name" className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal" />
+              </label>
+              <label className="text-xs font-semibold text-slate-700 sm:col-span-2">
+                PO document URL
+                <input type="url" value={purchaseOrderForm.documentUrl} onChange={event => setPurchaseOrderForm({ ...purchaseOrderForm, documentUrl: event.target.value })} placeholder="https://... (optional)" className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-sm font-normal" />
+              </label>
+            </div>
+
+            <div className="rounded-2xl bg-slate-50 p-4 text-sm">
+              <div className="flex justify-between text-slate-600"><span>Subtotal</span><span>₹{(purchaseOrderForm.quantity * purchaseOrderForm.rate).toLocaleString()}</span></div>
+              <div className="mt-1 flex justify-between text-slate-600"><span>Taxes ({purchaseOrderForm.taxPct}%)</span><span>₹{(purchaseOrderForm.quantity * purchaseOrderForm.rate * purchaseOrderForm.taxPct / 100).toLocaleString()}</span></div>
+              <div className="mt-2 flex justify-between border-t border-slate-200 pt-2 font-bold text-slate-900"><span>Total value</span><span>₹{(purchaseOrderForm.quantity * purchaseOrderForm.rate * (1 + purchaseOrderForm.taxPct / 100)).toLocaleString()}</span></div>
+            </div>
+            {purchaseOrderError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{purchaseOrderError}</p>}
+            <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+              <button type="button" onClick={() => setIsPurchaseOrderModalOpen(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
+              <button type="submit" className="rounded-xl bg-cyan-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-cyan-600">Save Purchase Order</button>
+            </div>
+          </form>
+        </div>
       )}
 
     </div>

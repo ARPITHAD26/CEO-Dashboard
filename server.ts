@@ -1,5 +1,7 @@
 import express from "express";
 import path from "path";
+import { promises as fs } from "node:fs";
+import { randomUUID } from "node:crypto";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
@@ -14,6 +16,56 @@ const PORT = Number(process.env.PORT) || 3000;
 // Body parsers with support for large file / document uploads
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+const UPLOADS_ROOT = path.join(process.cwd(), "uploads");
+const TRAINING_EVIDENCE_DIR = path.join(UPLOADS_ROOT, "training-evidence");
+app.use("/uploads", express.static(UPLOADS_ROOT));
+
+// -------------------------------------------------------------
+// Training-session evidence upload
+// -------------------------------------------------------------
+app.post(
+  "/api/training-evidence",
+  express.raw({
+    type: ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/gif"],
+    limit: "10mb"
+  }),
+  async (req, res) => {
+  try {
+    const sessionId = req.header("x-training-session-id");
+    const encodedFileName = req.header("x-training-file-name");
+    const mimeType = req.header("content-type")?.split(";")[0];
+    if (!sessionId || !encodedFileName || !mimeType || !Buffer.isBuffer(req.body)) {
+      return res.status(400).json({ error: "Session, file name, file type, and file data are required." });
+    }
+
+    const isPdf = mimeType === "application/pdf";
+    const isSupportedImage = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(mimeType);
+    if (!isPdf && !isSupportedImage) {
+      return res.status(400).json({ error: "Only PDF, JPG, PNG, WEBP, and GIF files are supported." });
+    }
+
+    const maxBytes = isPdf ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (req.body.length === 0 || req.body.length > maxBytes) {
+      return res.status(400).json({ error: isPdf ? "PDF files must be 10 MB or smaller." : "Photos must be 5 MB or smaller." });
+    }
+
+    const safeSessionId = String(sessionId).replace(/[^a-zA-Z0-9_-]/g, "_");
+    const safeFileName = path.basename(decodeURIComponent(encodedFileName)).replace(/[^a-zA-Z0-9._-]/g, "_");
+    const storedFileName = `${Date.now()}-${randomUUID()}-${safeFileName}`;
+    const sessionDirectory = path.join(TRAINING_EVIDENCE_DIR, safeSessionId);
+    await fs.mkdir(sessionDirectory, { recursive: true });
+    await fs.writeFile(path.join(sessionDirectory, storedFileName), req.body);
+
+    return res.status(201).json({
+      success: true,
+      url: `/uploads/training-evidence/${encodeURIComponent(safeSessionId)}/${encodeURIComponent(storedFileName)}`
+    });
+  } catch (err: any) {
+    console.error("Training evidence upload error:", err);
+    return res.status(500).json({ error: "Unable to store the training evidence file." });
+  }
+});
 
 // MongoDB Configuration & Client
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/spoorthy_dss";
@@ -100,7 +152,7 @@ app.get("/api/db/state", async (_req, res) => {
       "purchaseRequests", "vendors", "invoices", "expenses",
       "leads", "clients", "employees", "attendance", "leaves",
       "disciplinaryCases", "sites", "complaints", "incidents",
-      "trainings", "tasks", "auditLogs", "notifications", "alerts",
+      "trainings", "tdSessions", "tasks", "auditLogs", "notifications", "alerts",
       "itApplications", "itServerNodes", "itTickets", "itSecurityChecks",
       "itBottlenecks", "itVendorCommitments", "itWeeklyReports", "itProjects", "itTasks"
     ];

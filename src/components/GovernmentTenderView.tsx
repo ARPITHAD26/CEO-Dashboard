@@ -179,10 +179,13 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
     client_name: '',
     tender_name: '',
     nit_reference_number: '',
+    nit_reference_date: '',
     portal_name: 'GeM',
     portal_tender_id: '',
     tender_url: '',
     scope_of_work: '',
+    service_category: '',
+    total_manpower: 0,
     location: 'Bengaluru',
     tender_type: 'Open',
     estimated_tender_value: 0,
@@ -332,10 +335,16 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
       client_name: newTender.client_name!,
       tender_name: newTender.tender_name!,
       nit_reference_number: newTender.nit_reference_number!,
+      nit_reference_date: newTender.nit_reference_date || '',
+      corrigendum_addendum_details: newTender.corrigendum_addendum_details?.trim() || '',
+      corrigendum_addendum_document_name: newTender.corrigendum_addendum_document_name || '',
+      corrigendum_addendum_document_data: newTender.corrigendum_addendum_document_data || '',
       portal_name: newTender.portal_name || 'GeM',
       portal_tender_id: newTender.portal_tender_id || `PORTAL-${Date.now().toString().slice(-6)}`,
       tender_url: newTender.tender_url || 'https://gem.gov.in',
       scope_of_work: newTender.scope_of_work || '',
+      service_category: newTender.service_category?.trim() || '',
+      total_manpower: Number(newTender.total_manpower) || 0,
       location: newTender.location || 'Bengaluru',
       tender_type: newTender.tender_type || 'Open',
       estimated_tender_value: Number(newTender.estimated_tender_value) || 0,
@@ -343,6 +352,7 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
       publication_date: newTender.publication_date || new Date().toISOString().split('T')[0],
       doc_download_start: newTender.doc_download_start || new Date().toISOString().split('T')[0],
       doc_download_end: newTender.doc_download_end || '',
+      previous_meeting_date: newTender.previous_meeting_date || '',
       last_date_of_submission: newTender.last_date_of_submission || '',
       bid_validity_period: newTender.bid_validity_period || '90 Days',
       emd_amount: Number(newTender.emd_amount) || 0,
@@ -444,9 +454,65 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
       changes_summary: '',
       revised_submission_date: '',
       revised_boq: false,
+      document_name: undefined,
+      document_data: undefined,
       management_reviewed: false
     });
     setShowCorrigendumModal(false);
+  };
+
+  const handleCorrigendumPdfSelected = (file?: File) => {
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      alert('Please select a PDF file.');
+      return;
+    }
+    if (file.size > 700 * 1024) {
+      alert('Please select a PDF smaller than 700 KB so it can be saved with the tender record.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        alert('Could not read the selected PDF. Please try again.');
+        return;
+      }
+      setNewCorrigendum(current => ({
+        ...current,
+        document_name: file.name,
+        document_data: reader.result
+      }));
+    };
+    reader.onerror = () => alert('Could not read the selected PDF. Please try again.');
+    reader.readAsDataURL(file);
+  };
+
+  const handleTenderCorrigendumPdfSelected = (file?: File) => {
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      alert('Please select a PDF file.');
+      return;
+    }
+    if (file.size > 700 * 1024) {
+      alert('Please select a PDF smaller than 700 KB so it can be saved with the tender record.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        alert('Could not read the selected PDF. Please try again.');
+        return;
+      }
+      setNewTender(current => ({
+        ...current,
+        corrigendum_addendum_document_name: file.name,
+        corrigendum_addendum_document_data: reader.result
+      }));
+    };
+    reader.onerror = () => alert('Could not read the selected PDF. Please try again.');
+    reader.readAsDataURL(file);
   };
 
   const handleAcknowledgeCorrigendum = (index: number) => {
@@ -687,11 +753,11 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
             onChange={e => setPortalFilter(e.target.value)}
             className="px-3 py-1.5 text-xs border border-slate-200 rounded-xl bg-slate-50/50 font-medium text-slate-700"
           >
-            <option value="ALL">All Portals (GeM / CPPP / IREPS / State)</option>
+            <option value="ALL">All Portals (GeM / CPPP / KPPP / IREPS)</option>
             <option value="GeM">GeM Portal</option>
             <option value="CPPP">CPPP (Central eProcure)</option>
+            <option value="KPPP">KPPP (Karnataka Public Procurement)</option>
             <option value="IREPS">IREPS (Railways)</option>
-            <option value="State Portal">State Portals</option>
             <option value="Other">Other Portals</option>
           </select>
 
@@ -1096,8 +1162,14 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
                   <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 uppercase tracking-wider font-mono text-[10px]">
                     <th className="p-3">Tender ID</th>
                     <th className="p-3">Category</th>
+                    <th className="p-3">Service Category</th>
+                    <th className="p-3 text-right">Total Manpower</th>
                     <th className="p-3">Tender Name & Client</th>
                     <th className="p-3">Portal / NIT</th>
+                    <th className="p-3">NIT / Tender Ref Date</th>
+                    <th className="p-3">Previous Meeting Date</th>
+                    <th className="p-3">Corrigendum / Addendum</th>
+                    <th className="p-3">Corrigendum / Addendum PDF</th>
                     <th className="p-3 text-right">Value (INR)</th>
                     <th className="p-3">Submission Due</th>
                     <th className="p-3">Readiness</th>
@@ -1120,6 +1192,10 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
                             {t.government_category}
                           </span>
                         </td>
+                        <td className="p-3 text-slate-700">{t.service_category || '—'}</td>
+                        <td className="p-3 text-right font-mono font-semibold text-slate-700">
+                          {Number(t.total_manpower) > 0 ? Number(t.total_manpower).toLocaleString() : '—'}
+                        </td>
                         <td className="p-3">
                           <div className="font-bold text-slate-900">{t.tender_name}</div>
                           <div className="text-[11px] text-slate-500">{t.client_name} ({t.location})</div>
@@ -1127,6 +1203,45 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
                         <td className="p-3">
                           <div className="font-bold text-slate-700">{t.portal_name}</div>
                           <div className="text-[10px] font-mono text-slate-400">{t.nit_reference_number}</div>
+                        </td>
+                        <td className="p-3 font-mono text-slate-600">{t.nit_reference_date || '—'}</td>
+                        <td className="p-3 font-mono text-slate-600">{t.previous_meeting_date || t.pre_bid_meeting_date || '—'}</td>
+                        <td className="p-3">
+                          <div className="flex max-w-56 flex-col items-start gap-1">
+                            {t.corrigendum_addendum_details ? (
+                              <span className="line-clamp-3 text-slate-700" title={t.corrigendum_addendum_details}>
+                                {t.corrigendum_addendum_details}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">No details</span>
+                            )}
+                            {(t.corrigendums || []).length > 0 && (
+                              <span className="font-semibold text-amber-700">
+                                {t.corrigendums.length} issued
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          {t.corrigendum_addendum_document_data && t.corrigendum_addendum_document_name ? (
+                            <div className="flex flex-col items-start gap-1">
+                              <a
+                                href={t.corrigendum_addendum_document_data}
+                                download={t.corrigendum_addendum_document_name}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={e => e.stopPropagation()}
+                                className="font-semibold text-indigo-600 hover:text-indigo-800 underline"
+                              >
+                                View / Download PDF
+                              </a>
+                              <span className="max-w-40 truncate text-[10px] text-slate-500" title={t.corrigendum_addendum_document_name}>
+                                {t.corrigendum_addendum_document_name}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-slate-400">No PDF</span>
+                          )}
                         </td>
                         <td className="p-3 text-right font-mono font-bold text-slate-900">
                           ₹{(t.estimated_tender_value / 10000000).toFixed(2)} Cr
@@ -1656,6 +1771,19 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
                     <p className="text-slate-700 mt-1">{cor.changes_summary}</p>
                   </div>
 
+                  {cor.document_data && cor.document_name && (
+                    <a
+                      href={cor.document_data}
+                      download={cor.document_name}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 font-semibold text-indigo-700 hover:bg-indigo-100"
+                    >
+                      <FileText className="h-4 w-4" />
+                      View / Download PDF: {cor.document_name}
+                    </a>
+                  )}
+
                   <div className="flex flex-wrap gap-4 pt-2 border-t border-slate-100 text-[11px]">
                     {cor.revised_submission_date && (
                       <div>
@@ -1959,6 +2087,30 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
               </div>
 
               <div>
+                <label className="font-semibold text-slate-700 block mb-1">Service Category</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Housekeeping, Security, Facility Management"
+                  value={newTender.service_category || ''}
+                  onChange={e => setNewTender({ ...newTender, service_category: e.target.value })}
+                  className="w-full p-2.5 border border-slate-200 rounded-xl"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Total Manpower</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="e.g. 120"
+                  value={newTender.total_manpower || ''}
+                  onChange={e => setNewTender({ ...newTender, total_manpower: Number(e.target.value) })}
+                  className="w-full p-2.5 border border-slate-200 rounded-xl font-mono"
+                />
+              </div>
+
+              <div>
                 <label className="font-semibold text-slate-700 block mb-1">Client / Organization Name *</label>
                 <input
                   type="text"
@@ -2003,6 +2155,67 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
               </div>
 
               <div>
+                <label className="font-semibold text-slate-700 block mb-1">NIT / Tender Ref Date</label>
+                <input
+                  type="date"
+                  value={newTender.nit_reference_date || ''}
+                  onChange={e => setNewTender({ ...newTender, nit_reference_date: e.target.value })}
+                  className="w-full p-2.5 border border-slate-200 rounded-xl font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Previous Meeting Date</label>
+                <input
+                  type="date"
+                  value={newTender.previous_meeting_date || ''}
+                  onChange={e => setNewTender({ ...newTender, previous_meeting_date: e.target.value })}
+                  className="w-full p-2.5 border border-slate-200 rounded-xl font-mono"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="font-semibold text-slate-700 block mb-1">Corrigendum / Addendum</label>
+                <textarea
+                  rows={2}
+                  placeholder="Enter corrigendum or addendum details..."
+                  value={newTender.corrigendum_addendum_details || ''}
+                  onChange={e => setNewTender({ ...newTender, corrigendum_addendum_details: e.target.value })}
+                  className="w-full p-2.5 border border-slate-200 rounded-xl"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="font-semibold text-slate-700 block mb-1">Corrigendum / Addendum PDF</label>
+                <input
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={e => {
+                    handleTenderCorrigendumPdfSelected(e.target.files?.[0]);
+                    e.target.value = '';
+                  }}
+                  className="w-full p-2.5 border border-slate-200 rounded-xl bg-white"
+                />
+                <p className="mt-1 text-[10px] text-slate-500">PDF only, up to 700 KB.</p>
+                {newTender.corrigendum_addendum_document_name && (
+                  <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2">
+                    <span className="truncate text-slate-700">{newTender.corrigendum_addendum_document_name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setNewTender(current => ({
+                        ...current,
+                        corrigendum_addendum_document_name: '',
+                        corrigendum_addendum_document_data: ''
+                      }))}
+                      className="shrink-0 font-semibold text-rose-600 hover:text-rose-700"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div>
                 <label className="font-semibold text-slate-700 block mb-1">Portal Name</label>
                 <select
                   value={newTender.portal_name}
@@ -2012,7 +2225,7 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
                   <option value="GeM">GeM (Government e-Marketplace)</option>
                   <option value="CPPP">CPPP (Central Public Procurement)</option>
                   <option value="IREPS">IREPS (Indian Railways)</option>
-                  <option value="State Portal">State Portal</option>
+                  <option value="KPPP">KPPP (Karnataka Public Procurement)</option>
                   <option value="Other">Other</option>
                 </select>
               </div>
@@ -2167,6 +2380,36 @@ export const GovernmentTenderView: React.FC<GovernmentTenderViewProps> = ({
                   onChange={e => setNewCorrigendum({ ...newCorrigendum, changes_summary: e.target.value })}
                   className="w-full p-2.5 border border-slate-200 rounded-xl"
                 />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Corrigendum / Addendum PDF</label>
+                <input
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={e => {
+                    handleCorrigendumPdfSelected(e.target.files?.[0]);
+                    e.target.value = '';
+                  }}
+                  className="w-full p-2.5 border border-slate-200 rounded-xl bg-white"
+                />
+                <p className="mt-1 text-[10px] text-slate-500">PDF only, up to 700 KB.</p>
+                {newCorrigendum.document_name && (
+                  <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2">
+                    <span className="truncate text-slate-700">{newCorrigendum.document_name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setNewCorrigendum(current => ({
+                        ...current,
+                        document_name: undefined,
+                        document_data: undefined
+                      }))}
+                      className="shrink-0 font-semibold text-rose-600 hover:text-rose-700"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-2">

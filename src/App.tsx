@@ -20,6 +20,7 @@ import TrainingView from './components/TrainingView';
 import ITView from './components/ITView';
 import AdminPanel from './components/AdminPanel';
 import { AIDocumentImportModal } from './components/AIDocumentImportModal';
+import OrganizationChat from './components/OrganizationChat';
 import { GovernmentTenderView } from './components/GovernmentTenderView';
 import { PrivateTenderView } from './components/PrivateTenderView';
 import {
@@ -143,17 +144,30 @@ export default function App() {
       try {
         setCloudSyncing(true);
         const firestoreState = await fetchAppStateFromFirestore();
-        if (isMounted && firestoreState && (firestoreState.sites?.length > 0 || firestoreState.clients?.length > 0)) {
-          const stateWithIT = {
+        if (isMounted && firestoreState && (
+          firestoreState.sites?.length > 0 ||
+          firestoreState.clients?.length > 0 ||
+          firestoreState.stockItems?.length > 0
+        )) {
+          const stateWithInventory = {
             ...firestoreState,
+            procurementMasterCategories: firestoreState.procurementMasterCategories?.length ? firestoreState.procurementMasterCategories : state.procurementMasterCategories,
+            procurementMasterUnits: firestoreState.procurementMasterUnits?.length ? firestoreState.procurementMasterUnits : state.procurementMasterUnits,
+            procurementTeamMembers: firestoreState.procurementTeamMembers?.length ? firestoreState.procurementTeamMembers : state.procurementTeamMembers,
+            stockItems: firestoreState.stockItems?.length ? firestoreState.stockItems : state.stockItems,
+            stockTransactions: firestoreState.stockTransactions?.length ? firestoreState.stockTransactions : state.stockTransactions,
+            grnRecords: firestoreState.grnRecords?.length ? firestoreState.grnRecords : state.grnRecords,
+            stockIssues: firestoreState.stockIssues?.length ? firestoreState.stockIssues : state.stockIssues,
+            uniformAllocations: firestoreState.uniformAllocations?.length ? firestoreState.uniformAllocations : state.uniformAllocations,
+            machineryAssets: firestoreState.machineryAssets?.length ? firestoreState.machineryAssets : state.machineryAssets,
             itProjects: firestoreState.itProjects?.length ? firestoreState.itProjects : state.itProjects,
             itTasks: firestoreState.itTasks?.length ? firestoreState.itTasks : state.itTasks,
             itBottlenecks: firestoreState.itBottlenecks?.length ? firestoreState.itBottlenecks : state.itBottlenecks,
             itVendorCommitments: firestoreState.itVendorCommitments?.length ? firestoreState.itVendorCommitments : state.itVendorCommitments,
             itWeeklyReports: firestoreState.itWeeklyReports?.length ? firestoreState.itWeeklyReports : state.itWeeklyReports
           };
-          setState(stateWithIT);
-          saveState(stateWithIT);
+          setState(stateWithInventory);
+          saveState(stateWithInventory);
         }
       } catch (err) {
         console.warn('Initial cloud sync fallback to local storage:', err);
@@ -328,7 +342,7 @@ export default function App() {
               ) : currentUser.role === 'Procurement Head' && activeTab !== 'Admin' ? (
                 <div className="relative shrink-0">
                   <img
-                    src="/procurement-head-profile.jpg"
+                    src="/procurement-head-profile.jpg?v=20261106"
                     alt="Procurement Head Profile"
                     className="w-11 h-11 rounded-xl object-cover object-top border-2 border-cyan-400/70 shadow-[0_0_12px_rgba(6,182,212,0.25)]"
                     style={{ imageRendering: '-webkit-optimize-contrast' }}
@@ -714,7 +728,7 @@ export default function App() {
               )}
               {currentUser.role === 'Procurement Head' && activeTab !== 'Admin' && (
                 <img
-                  src="/procurement-head-profile.jpg"
+                  src="/procurement-head-profile.jpg?v=20261106"
                   alt="Procurement Head"
                   className="w-8 h-8 rounded-lg object-cover object-top border border-cyan-400/50 shadow-xs"
                   style={{ imageRendering: '-webkit-optimize-contrast' }}
@@ -911,6 +925,8 @@ export default function App() {
         onDataImported={handleDataImported}
         currentUserEmail={currentUser.email}
       />
+
+      <OrganizationChat currentUser={currentUser} />
 
     </div>
   );

@@ -1,4 +1,4 @@
-import { db } from './firebase';
+import { db, storage } from './firebase';
 import { 
   collection, 
   getDocs, 
@@ -7,12 +7,16 @@ import {
   deleteDoc, 
   writeBatch 
 } from 'firebase/firestore';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { AppState, Role, SubRoleDefinition } from '../types';
 
 // Simple mapping of AppState keys to Firestore collection names
 const COLLECTIONS = {
   purchaseRequests: 'purchaseRequests',
   vendors: 'vendors',
+  procurementMasterCategories: 'procurementMasterCategories',
+  procurementMasterUnits: 'procurementMasterUnits',
+  procurementTeamMembers: 'procurementTeamMembers',
   invoices: 'invoices',
   expenses: 'expenses',
   leads: 'leads',
@@ -25,6 +29,7 @@ const COLLECTIONS = {
   complaints: 'complaints',
   incidents: 'incidents',
   trainings: 'trainings',
+  tdSessions: 'tdSessions',
   tasks: 'tasks',
   auditLogs: 'auditLogs',
   notifications: 'notifications',
@@ -130,6 +135,9 @@ export async function fetchAppStateFromFirestore(): Promise<AppState> {
           return {
             purchaseRequests: st.purchaseRequests || [],
             vendors: st.vendors || [],
+            procurementMasterCategories: st.procurementMasterCategories || [],
+            procurementMasterUnits: st.procurementMasterUnits || [],
+            procurementTeamMembers: st.procurementTeamMembers || [],
             invoices: st.invoices || [],
             expenses: st.expenses || [],
             leads: st.leads || [],
@@ -142,6 +150,7 @@ export async function fetchAppStateFromFirestore(): Promise<AppState> {
             complaints: st.complaints || [],
             incidents: st.incidents || [],
             trainings: st.trainings || [],
+            tdSessions: st.tdSessions || [],
             tasks: st.tasks || [],
             auditLogs: st.auditLogs || [],
             notifications: st.notifications || [],
@@ -215,6 +224,9 @@ export async function fetchAppStateFromFirestore(): Promise<AppState> {
   return {
     purchaseRequests: state.purchaseRequests || [],
     vendors: state.vendors || [],
+    procurementMasterCategories: state.procurementMasterCategories || [],
+    procurementMasterUnits: state.procurementMasterUnits || [],
+    procurementTeamMembers: state.procurementTeamMembers || [],
     invoices: state.invoices || [],
     expenses: state.expenses || [],
     leads: state.leads || [],
@@ -227,6 +239,7 @@ export async function fetchAppStateFromFirestore(): Promise<AppState> {
     complaints: state.complaints || [],
     incidents: state.incidents || [],
     trainings: state.trainings || [],
+    tdSessions: state.tdSessions || [],
     tasks: state.tasks || [],
     auditLogs: state.auditLogs || [],
     notifications: state.notifications || [],
@@ -289,6 +302,59 @@ export async function fetchAppStateFromFirestore(): Promise<AppState> {
     opsAttentionItems: state.opsAttentionItems || [],
     opsDataDefinitions: state.opsDataDefinitions || []
   } as AppState;
+}
+
+/**
+ * Stores evidence through the application server (where it is available),
+ * with Firebase Storage as a cloud fallback for static deployments.
+ */
+export async function uploadTrainingEvidenceFile(sessionId: string, file: File): Promise<string> {
+  const mimeType = file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : '');
+  let serverFailure: unknown;
+
+  try {
+    const response = await fetch('/api/training-evidence', {
+      method: 'POST',
+      headers: {
+        'Content-Type': mimeType,
+        'x-training-session-id': sessionId,
+        'x-training-file-name': encodeURIComponent(file.name)
+      },
+      body: file
+    });
+    const responseBody = await response.json().catch(() => null);
+
+    if (response.ok && typeof responseBody?.url === 'string') {
+      return responseBody.url;
+    }
+
+    const error = new Error(responseBody?.error || 'The application server could not store this file.');
+    if (response.status >= 400 && response.status < 500 && response.status !== 404) {
+      (error as Error & { isValidationError?: boolean }).isValidationError = true;
+    }
+    throw error;
+  } catch (error) {
+    if ((error as Error & { isValidationError?: boolean }).isValidationError) {
+      throw error;
+    }
+    serverFailure = error;
+  }
+
+  const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const fileId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  const storageRef = ref(storage, `training-evidence/${sessionId}/${fileId}-${safeFileName}`);
+
+  try {
+    await uploadBytes(storageRef, file, {
+      contentType: mimeType || undefined,
+      customMetadata: { sessionId, originalFileName: file.name }
+    });
+
+    return getDownloadURL(storageRef);
+  } catch (storageError) {
+    console.error('Training evidence upload failed in the server and Firebase Storage:', serverFailure, storageError);
+    throw new Error('Unable to upload this file. Please try again after checking the server connection.');
+  }
 }
 
 // Save a single record/entity (Dual support: MongoDB & Firestore)
