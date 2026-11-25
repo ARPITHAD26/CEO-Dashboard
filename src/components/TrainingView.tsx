@@ -2342,24 +2342,19 @@ export default function TrainingView({
                   </select>
                 </div>
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-slate-700 font-semibold">Training Topic *</label>
-                    <button
-                      type="button"
-                      onClick={() => setIsTrainingTopicModalOpen(true)}
-                      className="text-[10px] text-sky-700 hover:text-sky-900 font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      <BookOpen className="w-3 h-3" />
-                      <span>Browse Topics</span>
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    value={sessionForm.topic}
-                    onChange={(e) => setSessionForm({ ...sessionForm, topic: e.target.value })}
+                  <label className="block text-slate-700 font-semibold mb-1">Training Topic *</label>
+                  <select
+                    value={sessionForm.topic || ''}
+                    onChange={(e) => setSessionForm((prev) => ({ ...prev, topic: e.target.value }))}
                     className="w-full bg-sky-50/50 border border-sky-200 rounded-xl p-2.5 text-slate-800 focus:bg-white focus:border-sky-500"
-                  />
+                  >
+                    <option value="">Select Training Topic</option>
+                    {masterTopics.map((t) => (
+                      <option key={t.id} value={t.topic_name}>
+                        {t.topic_name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
