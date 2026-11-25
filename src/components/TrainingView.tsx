@@ -261,6 +261,9 @@ export default function TrainingView({
     follow_up_action: '1 guard (Raju K.) requires re-test on Color Coded Waste Disposal next Monday.'
   });
 
+  // Selected Unit / Client Facility for the session dropdown (BMCRI, IT-BT, IIMB, Institution)
+  const [selectedUnitFacility, setSelectedUnitFacility] = useState<string>('');
+
   // Legacy Employee Form State for Employee Roster
   const [trForm, setTrForm] = useState<Partial<Training>>({
     training_name: 'Fire Safety & Fire-Fighting Drills',
@@ -2321,24 +2324,22 @@ export default function TrainingView({
             <form onSubmit={handleSessionSubmit} className="p-6 space-y-4 text-xs">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-slate-700 font-semibold">Unit / Client Facility *</label>
-                    <button
-                      type="button"
-                      onClick={() => setIsUnitFacilityModalOpen(true)}
-                      className="text-[10px] text-sky-700 hover:text-sky-900 font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      <Building2 className="w-3 h-3" />
-                      <span>Browse Units</span>
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    value={sessionForm.unit_or_client}
-                    onChange={(e) => setSessionForm({ ...sessionForm, unit_or_client: e.target.value })}
+                  <label className="block text-slate-700 font-semibold mb-1">Unit / Client Facility *</label>
+                  <select
+                    value={selectedUnitFacility || sessionForm.unit_or_client}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedUnitFacility(val);
+                      setSessionForm((prev) => ({ ...prev, unit_or_client: val }));
+                    }}
                     className="w-full bg-sky-50/50 border border-sky-200 rounded-xl p-2.5 text-slate-800 focus:bg-white focus:border-sky-500"
-                  />
+                  >
+                    <option value="">Select Unit / Client Facility</option>
+                    <option value="BMCRI">BMCRI</option>
+                    <option value="IT-BT">IT-BT</option>
+                    <option value="IIMB">IIMB</option>
+                    <option value="Institution">Institution</option>
+                  </select>
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
