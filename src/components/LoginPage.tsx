@@ -48,7 +48,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
       case 'BD Head': return Globe;
       case 'HR Head': return Users;
       case 'Operations Head': return MapPin;
-      case 'Training Head': return GraduationCap;
+      case 'Chief learning and IT infrastarucutre': return GraduationCap;
       case 'IT Head': return Laptop;
       default: return ShieldCheck;
     }
@@ -242,10 +242,10 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                       style={{ padding: '13px', borderRadius: '14px', border: isSel ? '1.5px solid #f59e0b' : '1.5px solid #e5e7eb', background: isSel ? 'linear-gradient(135deg,rgba(245,158,11,0.07),rgba(251,191,36,0.04))' : 'rgba(255,255,255,0.9)', boxShadow: isSel ? '0 4px 16px rgba(245,158,11,0.15)' : '0 2px 6px rgba(0,0,0,0.04)', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '7px', minWidth: 0 }}>
-                          {user.role === 'Training Head' ? (
+                          {user.role === 'Chief learning and IT infrastarucutre' ? (
                             <img
                               src="/training-head-profile.jpg"
-                              alt="Training Head"
+                              alt="Chief learning and IT infrastarucutre"
                               style={{
                                 width: '28px',
                                 height: '28px',
@@ -364,3 +364,5 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     </div>
   );
 }
+
+

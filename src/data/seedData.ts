@@ -159,7 +159,7 @@ export const INITIAL_TASKS: Task[] = [
   { id: 'TSK-002', title: 'Deploy Relief Force to General Hospital S-202', description: 'Address the 10-person manpower deficit highlighted by the Hospital Admin.', assigned_by: 'CEO Office', assigned_to: 'Operations Head', department: 'Operations', priority: 'Critical', due_date: '2026-07-12', status: 'Delayed', percent_completed: 40, remarks: 'Recruitments delayed by regional office.' }, // Overdue and Delayed!
   { id: 'TSK-003', title: 'Renew Global Supplies AMC for scrubbers', description: 'Service contract for 3 industrial scrubbers is expiring shortly.', assigned_by: 'Procurement Head', assigned_to: 'Procurement Head', department: 'Procurement', priority: 'Medium', due_date: '2026-08-15', status: 'Pending', percent_completed: 0, remarks: 'Awaiting revised commercial quote.' },
   { id: 'TSK-004', title: 'Submit Smart City Proposals', description: 'Complete pricing structure and performance bonds for the metro tender.', assigned_by: 'CEO Office', assigned_to: 'BD Head', department: 'Business Development', priority: 'High', due_date: '2026-07-15', status: 'Completed', percent_completed: 100, evidence_url: 'smart_city_tender_signed.pdf', remarks: 'Performance bonds uploaded and submitted successfully.' },
-  { id: 'TSK-005', title: 'Schedule ISO 9001 Refresher for S-203 Staff', description: 'Competency score at S-203 is low. Establish mandatory weekend class.', assigned_by: 'CEO Office', assigned_to: 'Training Head', department: 'Training & Development', priority: 'High', due_date: '2026-07-14', status: 'Delayed', percent_completed: 15, remarks: 'Room booking pending. Trainer not locked.' }, // Overdue and Delayed!
+  { id: 'TSK-005', title: 'Schedule ISO 9001 Refresher for S-203 Staff', description: 'Competency score at S-203 is low. Establish mandatory weekend class.', assigned_by: 'CEO Office', assigned_to: 'Chief learning and IT infrastarucutre', department: 'Training & Development', priority: 'High', due_date: '2026-07-14', status: 'Delayed', percent_completed: 15, remarks: 'Room booking pending. Trainer not locked.' }, // Overdue and Delayed!
   { id: 'TSK-006', title: 'Filing Statutory Provident Fund Returns', description: 'Monthly PF and ESIC compliance return submission.', assigned_by: 'HR Head', assigned_to: 'HR Head', department: 'Human Resources', priority: 'Medium', due_date: '2026-07-20', status: 'In Progress', percent_completed: 80, remarks: 'Draft receipts downloaded for audit' }
 ];
 
@@ -3292,3 +3292,4 @@ export function getEmptyState(): AppState {
     opsDataDefinitions: []
   };
 }
+

@@ -299,11 +299,11 @@ export default function App() {
                   />
                   <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-slate-900" />
                 </div>
-              ) : currentUser.role === 'Training Head' && activeTab !== 'Admin' ? (
+              ) : currentUser.role === 'Chief learning and IT infrastarucutre' && activeTab !== 'Admin' ? (
                 <div className="relative shrink-0">
                   <img
                     src="/training-head-profile.jpg"
-                    alt="Training Head Profile"
+                    alt="Chief learning and IT infrastarucutre Profile"
                     className="w-11 h-11 rounded-xl object-cover object-top border-2 border-fuchsia-400/70 shadow-[0_0_12px_rgba(217,70,239,0.25)]"
                     style={{ imageRendering: '-webkit-optimize-contrast' }}
                   />
@@ -517,15 +517,15 @@ export default function App() {
               </button>
             )}
 
-            {/* Nav item Training Head */}
-            {(isFullAccessUser || currentUser.role === 'Training Head') && (
+            {/* Nav item Chief learning and IT infrastarucutre */}
+            {(isFullAccessUser || currentUser.role === 'Chief learning and IT infrastarucutre') && (
               <button
-                onClick={() => selectTab('Training Head')}
-                className={`w-full text-left px-3.5 py-2 rounded-xl transition flex items-center gap-3 text-xs font-semibold ${activeTab === 'Training Head' ? 'font-bold' : 'hover:bg-[#161B2A]/60 text-slate-400'
+                onClick={() => selectTab('Chief learning and IT infrastarucutre')}
+                className={`w-full text-left px-3.5 py-2 rounded-xl transition flex items-center gap-3 text-xs font-semibold ${activeTab === 'Chief learning and IT infrastarucutre' ? 'font-bold' : 'hover:bg-[#161B2A]/60 text-slate-400'
                   }`}
-                style={activeTab === 'Training Head' ? { backgroundColor: `${currentPal.primary}1A`, border: `1px solid ${currentPal.primary}4D`, color: currentPal.primary, boxShadow: `0 0 15px ${currentPal.glow}` } : undefined}
+                style={activeTab === 'Chief learning and IT infrastarucutre' ? { backgroundColor: `${currentPal.primary}1A`, border: `1px solid ${currentPal.primary}4D`, color: currentPal.primary, boxShadow: `0 0 15px ${currentPal.glow}` } : undefined}
               >
-                <GraduationCap className="w-4 h-4" style={{ color: activeTab === 'Training Head' ? currentPal.primary : undefined }} />
+                <GraduationCap className="w-4 h-4" style={{ color: activeTab === 'Chief learning and IT infrastarucutre' ? currentPal.primary : undefined }} />
                 <span>Compliance Training</span>
               </button>
             )}
@@ -649,7 +649,7 @@ export default function App() {
                 {activeTab === 'BD Head' && 'Business Development, Tender Tracker & Leads Cockpit'}
                 {activeTab === 'HR Head' && 'Workforce Directory, Leaves & Disciplinary logs'}
                 {activeTab === 'Operations Head' && 'Sites, Complaints & SLA Incidents Desk'}
-                {activeTab === 'Training Head' && 'Compliance Training · Unit / Client Facility Master & Deployment'}
+                {activeTab === 'Chief learning and IT infrastarucutre' && 'Compliance Training · Unit / Client Facility Master & Deployment'}
                 {activeTab === 'IT Head' && 'IT & Application Health Panel'}
                 {activeTab === 'Admin' && 'System Access Matrix & Database Integrity Settings'}
               </h1>
@@ -694,10 +694,10 @@ export default function App() {
                   style={{ imageRendering: '-webkit-optimize-contrast' }}
                 />
               )}
-              {currentUser.role === 'Training Head' && activeTab !== 'Admin' && (
+              {currentUser.role === 'Chief learning and IT infrastarucutre' && activeTab !== 'Admin' && (
                 <img
                   src="/training-head-profile.jpg"
-                  alt="Training Head"
+                  alt="Chief learning and IT infrastarucutre"
                   className="w-8 h-8 rounded-lg object-cover object-top border border-fuchsia-400/50 shadow-xs"
                   style={{ imageRendering: '-webkit-optimize-contrast' }}
                 />
@@ -833,13 +833,13 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'Training Head' && (isFullAccessUser || currentUser.role === 'Training Head') && (
+          {activeTab === 'Chief learning and IT infrastarucutre' && (isFullAccessUser || currentUser.role === 'Chief learning and IT infrastarucutre') && (
             <TrainingView
               state={state}
               onUpdateState={handleUpdateState}
               currentUserEmail={currentUser.email}
-              allowedSubViews={currentUser.role === 'Training Head' ? currentUser.allowedSubViews : undefined}
-              subRoleName={currentUser.role === 'Training Head' ? currentUser.subRoleName : undefined}
+              allowedSubViews={currentUser.role === 'Chief learning and IT infrastarucutre' ? currentUser.allowedSubViews : undefined}
+              subRoleName={currentUser.role === 'Chief learning and IT infrastarucutre' ? currentUser.subRoleName : undefined}
             />
           )}
 
@@ -931,3 +931,5 @@ export default function App() {
     </div>
   );
 }
+
+

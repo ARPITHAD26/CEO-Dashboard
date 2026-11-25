@@ -17,7 +17,7 @@ const ROLES_INFO: Record<Role, { name: string; desc: string; color: string }> = 
   'BD Head': { name: 'Business Development Head', desc: 'Corporate Leads & Active Tenders', color: 'from-sky-400 to-sky-600' },
   'HR Head': { name: 'Human Resources Head', desc: 'Roster, Attendance & Leaves', color: 'from-amber-500 to-orange-600' },
   'Operations Head': { name: 'Operations Head', desc: 'Sites, Complaints & Alerts', color: 'from-sky-500 to-sky-600' },
-  'Training Head': { name: 'Training & Development Head', desc: 'Programs, Grades & Expiries', color: 'from-fuchsia-500 to-pink-600' },
+  'Chief learning and IT infrastarucutre': { name: 'Training & Development Head', desc: 'Programs, Grades & Expiries', color: 'from-fuchsia-500 to-pink-600' },
   'IT Head': { name: 'Information Technology Head', desc: 'App Health, VPS Nodes, Tickets & Security', color: 'from-cyan-500 to-teal-500' }
 };
 
@@ -60,7 +60,7 @@ export default function RoleSwitcher({ currentRole, onChangeRole, onResetData }:
               <option value="BD Head">BD Head</option>
               <option value="HR Head">HR Head</option>
               <option value="Operations Head">Operations Head</option>
-              <option value="Training Head">Training Head</option>
+              <option value="Chief learning and IT infrastarucutre">Chief learning and IT infrastarucutre</option>
               <option value="IT Head">IT Head (App Status & VPS)</option>
             </select>
           </div>
@@ -77,3 +77,5 @@ export default function RoleSwitcher({ currentRole, onChangeRole, onResetData }:
     </div>
   );
 }
+
+

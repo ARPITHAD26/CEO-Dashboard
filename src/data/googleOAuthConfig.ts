@@ -36,7 +36,7 @@ export const EMAIL_TO_ROLE_MAP: Record<string, GoogleRoleMapping> = {
   'hr@spoorthy.com':           { role: 'HR Head',          name: 'Pooja Nair (HR Head)',               department: 'Human Resources & Talent',         fullAccess: false },
   'operations@spoorthy.com':   { role: 'Operations Head',  name: 'Col. S. Rathore (Operations Head)', department: 'Facility & Security Operations',    fullAccess: false },
   'ops@spoorthy.com':          { role: 'Operations Head',  name: 'Col. S. Rathore (Operations Head)', department: 'Facility & Security Operations',    fullAccess: false },
-  'training@spoorthy.com':     { role: 'Training Head',    name: 'Training Head',                      department: 'Training & Skill Development',      fullAccess: false },
+  'training@spoorthy.com':     { role: 'Chief learning and IT infrastarucutre',    name: 'Chief learning and IT infrastarucutre',                      department: 'Training & Skill Development',      fullAccess: false },
   'it@spoorthy.com':           { role: 'IT Head',          name: 'Arun Verma (IT Head)',               department: 'IT & Infrastructure Health',        fullAccess: false },
 
   // ── Add personal Gmail addresses below (replace with real Gmail IDs) ─────────
@@ -138,3 +138,4 @@ declare global {
     };
   }
 }
+

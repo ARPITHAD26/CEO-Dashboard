@@ -1,4 +1,4 @@
-export type Role = 'CEO' | 'Admin' | 'Government Tenders' | 'Private Tenders' | 'Procurement Head' | 'Finance Head' | 'BD Head' | 'HR Head' | 'Operations Head' | 'Training Head' | 'IT Head';
+export type Role = 'CEO' | 'Admin' | 'Government Tenders' | 'Private Tenders' | 'Procurement Head' | 'Finance Head' | 'BD Head' | 'HR Head' | 'Operations Head' | 'Chief learning and IT infrastarucutre' | 'IT Head';
 
 export interface SubRoleDefinition {
   id: string;
