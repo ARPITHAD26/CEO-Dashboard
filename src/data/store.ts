@@ -704,7 +704,7 @@ export function filterStateForRole(state: AppState, role: Role, userEmail: strin
   else if (role === 'BD Head') dept = 'Business Development';
   else if (role === 'HR Head') dept = 'Human Resources';
   else if (role === 'Operations Head') dept = 'Operations';
-  else if (role === 'Chief learning and IT infrastarucutre') dept = 'Training & Development';
+  else if (role === 'Chief Learning & IT Infrastructure') dept = 'Training & Development';
   else if (role === 'IT Head') dept = 'IT & Systems';
 
   if (!dept) return filtered;
@@ -839,4 +839,6 @@ export function filterStateForRole(state: AppState, role: Role, userEmail: strin
 
   return filtered;
 }
+
+
 

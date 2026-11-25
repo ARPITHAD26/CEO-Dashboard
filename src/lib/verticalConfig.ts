@@ -117,8 +117,8 @@ export const VERTICAL_CONFIGS: Record<Role, VerticalMetadata> = {
       { id: 'tasks', name: 'Site Ops Action Tasks', description: 'Site inspections, roster reallocations, and drills' }
     ]
   },
-  'Chief learning and IT infrastarucutre': {
-    role: 'Chief learning and IT infrastarucutre',
+  'Chief Learning & IT Infrastructure': {
+    role: 'Chief Learning & IT Infrastructure',
     verticalName: 'Training & Skill Development',
     color: 'fuchsia',
     accentBg: 'bg-fuchsia-500/10',
@@ -174,4 +174,6 @@ export const VERTICAL_CONFIGS: Record<Role, VerticalMetadata> = {
     ]
   }
 };
+
+
 

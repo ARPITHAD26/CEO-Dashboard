@@ -463,7 +463,7 @@ export default function AdminPanel({ onUpdateState, currentUserEmail }: AdminPan
                   <option value="Operations Head">Operations Head (Sites, Audits &amp; Incidents)</option>
                   <option value="Procurement Head">Procurement Head (PRs, POs &amp; Vendors)</option>
                   <option value="BD Head">BD Head (Sales Pipeline, Leads &amp; Tenders)</option>
-                  <option value="Chief learning and IT infrastarucutre">Chief learning and IT infrastarucutre (Programs &amp; Drills)</option>
+                  <option value="Chief Learning & IT Infrastructure">Chief Learning & IT Infrastructure (Programs &amp; Drills)</option>
                   <option value="IT Head">IT Head (Applications, VPS &amp; Tickets)</option>
                   <option value="CEO">CEO (Executive Cockpit &amp; Metrics)</option>
                   <option value="Admin">Master System Administrator</option>
@@ -558,7 +558,7 @@ export default function AdminPanel({ onUpdateState, currentUserEmail }: AdminPan
                       else if (mapping.role === 'IT Head') badge = 'bg-cyan-100 text-cyan-800 border-cyan-200 font-bold';
                       else if (mapping.role === 'BD Head') badge = 'bg-indigo-100 text-indigo-800 border-indigo-200 font-bold';
                       else if (mapping.role === 'Procurement Head') badge = 'bg-teal-100 text-teal-800 border-teal-200 font-bold';
-                      else if (mapping.role === 'Chief learning and IT infrastarucutre') badge = 'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200 font-bold';
+                      else if (mapping.role === 'Chief Learning & IT Infrastructure') badge = 'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200 font-bold';
 
                       return (
                         <tr key={mapping.email} className="hover:bg-slate-50 transition">
@@ -707,7 +707,7 @@ export default function AdminPanel({ onUpdateState, currentUserEmail }: AdminPan
                   <option value="Operations Head">Operations &amp; Security Vertical</option>
                   <option value="Procurement Head">Procurement &amp; Vendor Vertical</option>
                   <option value="BD Head">Business Development Vertical</option>
-                  <option value="Chief learning and IT infrastarucutre">Training &amp; Drills Vertical</option>
+                  <option value="Chief Learning & IT Infrastructure">Training &amp; Drills Vertical</option>
                   <option value="IT Head">IT &amp; Application Health Vertical</option>
                 </select>
               </div>
@@ -823,7 +823,7 @@ export default function AdminPanel({ onUpdateState, currentUserEmail }: AdminPan
                   <option value="Operations Head">Operations</option>
                   <option value="Procurement Head">Procurement</option>
                   <option value="BD Head">BD</option>
-                  <option value="Chief learning and IT infrastarucutre">Training</option>
+                  <option value="Chief Learning & IT Infrastructure">Training</option>
                   <option value="IT Head">IT</option>
                 </select>
               </div>
@@ -1012,4 +1012,6 @@ export default function AdminPanel({ onUpdateState, currentUserEmail }: AdminPan
     </div>
   );
 }
+
+
 

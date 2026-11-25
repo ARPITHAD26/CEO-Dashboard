@@ -151,3 +151,4 @@ export default function ITApplicationHealthPanel({ state, onNavigate }: ITApplic
 function EmptyPanel({ label }: { label: string }) {
   return <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500">{label}</div>;
 }
+

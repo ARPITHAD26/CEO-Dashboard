@@ -960,3 +960,4 @@ export const INITIAL_LIVE_UPDATES: LiveUpdateEvent[] = [
     status_badge: 'Postponed'
   }
 ];
+

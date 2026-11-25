@@ -355,3 +355,4 @@ export function ProcurementMasterDataView({ state, userEmail, onUpdateState }: P
     </div>
   );
 }
+

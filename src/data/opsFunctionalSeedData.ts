@@ -1234,3 +1234,4 @@ export const INITIAL_OPS_DATA_DEFINITIONS: OpsDataDefinition[] = [
     target_benchmark: '≥ 95.0% Operational Machine Availability'
   }
 ];
+

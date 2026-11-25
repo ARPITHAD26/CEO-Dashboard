@@ -358,3 +358,4 @@ export const CRMDailyActivityReportView: React.FC<Props> = ({
     </div>
   );
 };
+

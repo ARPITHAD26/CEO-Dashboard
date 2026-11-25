@@ -215,3 +215,4 @@ export function OpsInspectionsTab({ state, onOpenSubmit }: OpsInspectionsTabProp
     </div>
   );
 }
+

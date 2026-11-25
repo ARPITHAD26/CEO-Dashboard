@@ -866,3 +866,4 @@ export const StoresAndInventoryView: React.FC<StoresAndInventoryViewProps> = ({
     </div>
   );
 };
+

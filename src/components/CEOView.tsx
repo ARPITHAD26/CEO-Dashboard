@@ -1281,3 +1281,4 @@ function KPICard({ label, val, change, s }: { label: string; val: any; change: s
     </div>
   );
 }
+

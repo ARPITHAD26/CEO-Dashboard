@@ -1019,3 +1019,4 @@ export const TenderManagementView: React.FC<TenderManagementViewProps> = ({
     </div>
   );
 };
+

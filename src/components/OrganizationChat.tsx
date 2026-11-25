@@ -203,3 +203,4 @@ export default function OrganizationChat({ currentUser }: OrganizationChatProps)
     </div>
   );
 }
+

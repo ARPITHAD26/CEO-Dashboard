@@ -504,3 +504,4 @@ export const defaultAIStudioProjectReview: AIStudioProjectReview = {
     'Customer Acquisition Cost (CAC) by granular paid marketing channel is pending Google Ads attribution pipeline rollout (marked as "Data needed: Channel CAC").'
   ]
 };
+

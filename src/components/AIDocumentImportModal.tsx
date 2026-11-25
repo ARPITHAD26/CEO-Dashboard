@@ -91,7 +91,7 @@ export function AIDocumentImportModal({
           { value: 'purchaseRequests', label: 'Purchase Requests (PRs)' },
           { value: 'vendors', label: 'Approved Vendors' }
         ];
-      case 'Chief learning and IT infrastarucutre':
+      case 'Chief Learning & IT Infrastructure':
         return [
           { value: 'auto', label: '⚡ Auto-Detect Entity' },
           { value: 'trainings', label: 'Training Sessions & Scores' }
@@ -677,3 +677,5 @@ export function AIDocumentImportModal({
     </div>
   );
 }
+
+

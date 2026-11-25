@@ -826,13 +826,13 @@ export default function TrainingView({
       {/* ------------------------------------------------------------- */}
       <div className="bg-white text-slate-800 rounded-3xl p-6 shadow-sm border border-slate-200/90 relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-          {/* Left: Chief learning and IT infrastarucutre HD Portrait + Identity & Cockpit Title */}
+          {/* Left: Chief Learning & IT Infrastructure HD Portrait + Identity & Cockpit Title */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-            {/* Chief learning and IT infrastarucutre HD Photo Frame with Zoom & Crisp Resolution */}
+            {/* Chief Learning & IT Infrastructure HD Photo Frame with Zoom & Crisp Resolution */}
             <div 
               className="relative group cursor-pointer shrink-0" 
               onClick={() => setIsPhotoModalOpen(true)} 
-              title="Click to view full HD portrait of Chief learning and IT infrastarucutre"
+              title="Click to view full HD portrait of Chief Learning & IT Infrastructure"
             >
               {/* Outer decorative glowing ring */}
               <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-fuchsia-500 via-pink-500 to-sky-400 opacity-75 group-hover:opacity-100 blur-sm transition duration-300" />
@@ -840,7 +840,7 @@ export default function TrainingView({
               <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-white shadow-xl bg-slate-900">
                 <img 
                   src="/training-head-profile.jpg" 
-                  alt="Chief learning and IT infrastarucutre" 
+                  alt="Chief Learning & IT Infrastructure" 
                   className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
                   style={{ imageRendering: '-webkit-optimize-contrast' }}
                   loading="eager"
@@ -872,7 +872,7 @@ export default function TrainingView({
                 </span>
               </div>
               <h1 className="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5 flex-wrap">
-                <span>Chief learning and IT infrastarucutre</span>
+                <span>Chief Learning & IT Infrastructure</span>
                 <span className="text-xs sm:text-sm font-semibold text-slate-600 font-sans tracking-normal bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
                   Compliance Training &amp; T&amp;D Cockpit
                 </span>
@@ -1606,7 +1606,7 @@ export default function TrainingView({
       {/* ------------------------------------------------------------- */}
       {activeTab === 'tasks' && (
         <div className="space-y-4">
-          {state.tasks.filter(t => t.department === 'Training & Development' || t.assigned_to === 'Chief learning and IT infrastarucutre').map((task) => (
+          {state.tasks.filter(t => t.department === 'Training & Development' || t.assigned_to === 'Chief Learning & IT Infrastructure').map((task) => (
             <div key={task.id} className="p-5 bg-white border border-sky-200 hover:border-sky-300 rounded-3xl flex items-center justify-between gap-4 shadow-sm transition">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -2655,7 +2655,7 @@ export default function TrainingView({
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* Chief learning and IT infrastarucutre HD PHOTO VIEWER LIGHTBOX MODAL                   */}
+      {/* Chief Learning & IT Infrastructure HD PHOTO VIEWER LIGHTBOX MODAL                   */}
       {/* ------------------------------------------------------------- */}
       {isPhotoModalOpen && (
         <div 
@@ -2674,7 +2674,7 @@ export default function TrainingView({
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <span>Chief learning and IT infrastarucutre</span>
+                    <span>Chief Learning & IT Infrastructure</span>
                     <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30">
                       T&amp;D Executive
                     </span>
@@ -2695,7 +2695,7 @@ export default function TrainingView({
             <div className="relative rounded-2xl overflow-hidden border-2 border-slate-700/80 bg-black shadow-inner flex items-center justify-center min-h-[380px] max-h-[520px]">
               <img 
                 src="/training-head-profile.jpg" 
-                alt="Chief learning and IT infrastarucutre - Executive Portrait" 
+                alt="Chief Learning & IT Infrastructure - Executive Portrait" 
                 className="w-full max-h-[500px] object-contain"
                 style={{ imageRendering: '-webkit-optimize-contrast' }}
               />
@@ -2709,7 +2709,7 @@ export default function TrainingView({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
               <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
                 <div className="text-[10px] text-slate-400 font-mono">Designation</div>
-                <div className="font-bold text-slate-200 mt-0.5 truncate">Chief learning and IT infrastarucutre</div>
+                <div className="font-bold text-slate-200 mt-0.5 truncate">Chief Learning & IT Infrastructure</div>
               </div>
               <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
                 <div className="text-[10px] text-slate-400 font-mono">Department</div>
@@ -2753,5 +2753,7 @@ export default function TrainingView({
     </div>
   );
 }
+
+
 
 

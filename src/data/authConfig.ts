@@ -132,8 +132,8 @@ export const STANDARD_USERS: StandardUserCredentials[] = [
     username: 'Training',
     aliases: ['training'],
     password: 'Train@2026',
-    role: 'Chief learning and IT infrastarucutre',
-    name: 'Chief learning and IT infrastarucutre',
+    role: 'Chief Learning & IT Infrastructure',
+    name: 'Chief Learning & IT Infrastructure',
     department: 'Training & Skill Development',
     description: 'Compliance Programs, Guard Certifications & Competency Scoreboard',
     color: 'from-fuchsia-500 to-pink-600',
@@ -232,7 +232,7 @@ export function getAllowedTabsForRole(role: Role): Role[] {
       'BD Head',
       'HR Head',
       'Operations Head',
-      'Chief learning and IT infrastarucutre',
+      'Chief Learning & IT Infrastructure',
       'IT Head',
       'Admin'
     ];
@@ -268,4 +268,6 @@ export function clearSessionUser(): void {
     console.error('Failed to clear session user:', err);
   }
 }
+
+
 

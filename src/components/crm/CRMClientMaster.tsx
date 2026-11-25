@@ -566,3 +566,4 @@ export const CRMClientMasterView: React.FC<Props> = ({
     </div>
   );
 };
+

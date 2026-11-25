@@ -336,3 +336,4 @@ function mapToGeneric(row: Record<string, any>, index: number, type: string) {
     ...row
   };
 }
+

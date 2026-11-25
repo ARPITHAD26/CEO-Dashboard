@@ -74,3 +74,4 @@ export async function clearChatMessages() {
 
   return documents.length;
 }
+

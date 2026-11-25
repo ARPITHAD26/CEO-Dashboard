@@ -881,3 +881,4 @@ export const ProcurementTeamTaskView: React.FC<ProcurementTeamTaskViewProps> = (
     </div>
   );
 };
+

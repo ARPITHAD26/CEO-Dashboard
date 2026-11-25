@@ -739,3 +739,4 @@ export function applyThemeToDOM(config: UserThemeConfig, isLight: boolean = fals
 
   return activePalette;
 }
+
