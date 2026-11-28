@@ -13,7 +13,7 @@ export function getInitialState(): AppState {
   if (localDb) {
     try {
       const parsed = JSON.parse(localDb);
-      if (parsed.purchaseRequests && parsed.employees && parsed.sites) {
+      if (parsed) {
         const seed = getSeedState();
         return {
           ...seed,
