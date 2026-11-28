@@ -65,6 +65,21 @@ export function getInitialState(): AppState {
 
 export function saveState(state: AppState) {
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
+  // Persist to backend DB asynchronously
+  persistState(state);
+}
+
+// Persist state to backend DB
+export async function persistState(state: AppState) {
+  try {
+    await fetch('/api/db/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state),
+    });
+  } catch (e) {
+    console.error('Failed to persist state to server', e);
+  }
 }
 
 // Full audit log generator

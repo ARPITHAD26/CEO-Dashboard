@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AppState, Role, UserAccount } from './types';
-import { getInitialState, saveState, getSeedState } from './data/store';
+import { getInitialState, saveState, getSeedState, persistState } from './data/store';
 import {
   getSessionUser,
   setSessionUser,
@@ -184,8 +184,10 @@ export default function App() {
   // Sync state whenever it changes
   const handleUpdateState = (newState: AppState) => {
     setState(newState);
+    // Save locally
     saveState(newState);
-
+    // Persist to backend DB (MongoDB)
+    persistState(newState);
     // Background push to Firestore
     setCloudSyncing(true);
     saveWholeStateToFirestore(newState)
